@@ -1,0 +1,43 @@
+# FastAPI
+fastapi==0.115.*
+uvicorn[standard]==0.34.*
+pydantic==2.*
+pydantic-settings==2.*
+
+# Database
+sqlalchemy[asyncio]==2.*
+asyncpg==0.30.*
+psycopg2-binary==2.9.*
+alembic==1.14.*
+
+# Redis
+redis[hiredis]==5.*
+
+# Celery
+celery[redis]==5.*
+
+# Auth
+python-jose[cryptography]==3.*
+passlib[bcrypt]==1.*
+
+# HTTP client (for Zoho API, LLM API)
+httpx==0.28.*
+
+# LLM
+openai==1.*
+anthropic==0.*
+
+# Qdrant (Phase 2)
+qdrant-client==1.*
+
+# PII detection
+presidio-analyzer==2.*
+presidio-anonymizer==2.*
+
+# Email
+aiosmtplib==3.*
+
+# Utilities
+python-multipart==0.*
+python-dotenv==1.*
+orjson==3.*
