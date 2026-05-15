@@ -12,7 +12,7 @@ The ticketing platform is a **replaceable plugin** behind a `TicketingProvider` 
 - **Database:** PostgreSQL 15+
 - **Cache / Queue:** Redis 7+
 - **Task Queue:** Celery
-- **AI:** OpenAI GPT-4o-mini / GPT-4o
+-syncing changes **AI:** OpenAI GPT-4o-mini / GPT-4o
 - **ORM:** SQLAlchemy 2.0 (async)
 - **Auth:** JWT
 
