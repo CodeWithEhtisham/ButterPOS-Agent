@@ -17,6 +17,7 @@ Living record of every architectural choice and why it was made. When the Team L
 | D-7 | Assumptions A1–A7 | Resolved (2026-06-01) |
 | D-8 | Provider API keys available today | Resolved (2026-06-01) |
 | D-9 | Primary + fallback LLM model | Pending (Step 0.2 — live eval blocked on `OPENAI_API_KEY`) |
+| D-10 | KB MVP list gates Phase 2 | Resolved (2026-06-01) — production audit pending WhatsApp export |
 
 ---
 
@@ -238,3 +239,44 @@ cd spikes/0.2_llm_eval && ../../.venv/bin/pip install openai
 ```
 
 Update this ADR with scorecard numbers from `results/eval_report_*.json`.
+
+---
+
+## D-10 — KB MVP list gates Phase 2
+
+**Status:** Resolved (2026-06-01) — tooling ready; production audit pending WhatsApp export
+
+### Context
+
+Phase 2 builds the knowledge base (bilingual articles, RAG, playbooks). Without a data-driven MVP list derived from real support history, article authoring risks covering the wrong issues or missing high-frequency Roman Urdu topics.
+
+### Decision
+
+Step 0.3 **hard-gates Phase 2 KB work**. The top-30 MVP article list must come from a WhatsApp support export (3–6 months), processed by `spikes/0.3_kb_audit/run_audit.py`, and signed off by the support team.
+
+Phase 1 is **not blocked** by this gate.
+
+### Deliverables
+
+| Item | Status |
+|------|--------|
+| Categorizer + MVP generator | Ready — `spikes/0.3_kb_audit/run_audit.py` |
+| 30-row CSV template | Ready — `spikes/0.3_kb_audit/templates/mvp_articles_template.csv` |
+| Demo frequency report | Sample only — `sample_data/sample_messages.json` (30 msgs) |
+| Production frequency report | **Pending** — requires WhatsApp export + author names |
+
+### Consequences
+
+- Phase 2 KB article sprint starts only after production MVP CSV is signed off in `PROGRESS.md`.
+- Articles marked `roman_urdu_needed=Y` in the MVP sheet require bilingual content (`content_ur` per Phase 1 schema).
+- `existing_doc` column must be filled manually before Phase 2 to avoid duplicating internal docs.
+
+### How to complete
+
+```bash
+python spikes/0.3_kb_audit/run_audit.py \
+  --input /path/to/whatsapp_export.json \
+  --authors "Author1,Author2,Author3"
+```
+
+Review output in `spikes/0.3_kb_audit/results/mvp_articles_*.csv` and sign off with support team.

@@ -1,0 +1,31 @@
+rank,issue_title,category,frequency,existing_doc,author,roman_urdu_needed,notes
+1,Orders not syncing to cloud,network,DEMO:4,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+2,Receipt printer offline,printer,DEMO:4,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+3,Login loop after correct PIN,login,DEMO:3,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+4,Payment overdue despite payment,billing,DEMO:2,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+5,General support request,general,DEMO:2,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+6,Vague / needs clarification,general,DEMO:2,,TBD,N,Demo/sample data — replace with real WhatsApp export
+7,New menu items not showing on tablet,menu,DEMO:2,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+8,WiFi connected but no internet,network,DEMO:2,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+9,KOT printing blank tickets,printer,DEMO:2,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+10,Multi-branch plan upgrade,billing,DEMO:1,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+11,App crashes on reports,crash,DEMO:1,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+12,Insufficient permissions for manager,login,DEMO:1,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+13,Wrong price on tablet vs admin,menu,DEMO:1,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+14,Day-end report totals mismatch,network,DEMO:1,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+15,Bluetooth printer pairing,printer,DEMO:1,,TBD,Y,Demo/sample data — replace with real WhatsApp export
+16,Printer general issues,printer,DEMO:1,,TBD,N,Demo/sample data — replace with real WhatsApp export
+17,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+18,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+19,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+20,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+21,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+22,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+23,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+24,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+25,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+26,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+27,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+28,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+29,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export
+30,(Reserved — add from export),general,DEMO:0,,TBD,N,Demo/sample data — replace with real WhatsApp export

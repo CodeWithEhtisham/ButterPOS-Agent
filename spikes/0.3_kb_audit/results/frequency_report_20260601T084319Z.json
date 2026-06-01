@@ -1,0 +1,154 @@
+{
+  "generated_at": "2026-06-01T08:43:19.592704+00:00",
+  "category_counts": {
+    "printer": 8,
+    "network": 7,
+    "login": 4,
+    "menu": 3,
+    "billing": 3,
+    "crash": 1,
+    "general": 4
+  },
+  "top_issues": [
+    {
+      "issue_title": "Orders not syncing to cloud",
+      "category": "network",
+      "frequency": 4,
+      "sample_messages": [
+        "Orders sync nahi ho rahe, 2 ghantay se pending hai",
+        "Orders are not syncing to the cloud. Last sync was 2 hours ago",
+        "Sync 3 din se stuck hai. Cache clear bhi kar liya"
+      ]
+    },
+    {
+      "issue_title": "Receipt printer offline",
+      "category": "printer",
+      "frequency": 4,
+      "sample_messages": [
+        "Printer offline aa raha hai, receipt nahi nikal rahi",
+        "Receipt printer is showing offline but it was working yesterday",
+        "Printer offline hai. Pehle restart kiya, phir cable check ki, phir bhi nahi"
+      ]
+    },
+    {
+      "issue_title": "Login loop after correct PIN",
+      "category": "login",
+      "frequency": 3,
+      "sample_messages": [
+        "PIN sahi dalne ke baad bhi login screen pe wapas aa jata hai",
+        "Staff login keeps looping back to the password screen",
+        "Login loop ho raha hai, correct PIN ke baad bhi wapas aa jata hai"
+      ]
+    },
+    {
+      "issue_title": "Payment overdue despite payment",
+      "category": "billing",
+      "frequency": 2,
+      "sample_messages": [
+        "Payment overdue ka message aa raha hai, hum ne pay kar diya tha",
+        "Payment overdue warning aa rahi hai, we already paid via bank"
+      ]
+    },
+    {
+      "issue_title": "General support request",
+      "category": "general",
+      "frequency": 2,
+      "sample_messages": [
+        "App crashes when opening the reports section",
+        "Table layout purana dikha raha hai after seating change"
+      ]
+    },
+    {
+      "issue_title": "Vague / needs clarification",
+      "category": "general",
+      "frequency": 2,
+      "sample_messages": [
+        "help",
+        "not working"
+      ]
+    },
+    {
+      "issue_title": "New menu items not showing on tablet",
+      "category": "menu",
+      "frequency": 2,
+      "sample_messages": [
+        "Dashboard se naya item add kiya lekin tablet pe nazar nahi aa raha",
+        "New menu items not showing on tablet after dashboard update"
+      ]
+    },
+    {
+      "issue_title": "WiFi connected but no internet",
+      "category": "network",
+      "frequency": 2,
+      "sample_messages": [
+        "WiFi connected dikha raha hai lekin app kehti hai internet nahi",
+        "POS says no internet but WiFi icon shows connected"
+      ]
+    },
+    {
+      "issue_title": "KOT printing blank tickets",
+      "category": "printer",
+      "frequency": 2,
+      "sample_messages": [
+        "KOT blank print ho raha hai for some orders",
+        "KOT printer prints blank tickets for some orders only"
+      ]
+    },
+    {
+      "issue_title": "Multi-branch plan upgrade",
+      "category": "billing",
+      "frequency": 1,
+      "sample_messages": [
+        "Doosri branch add karni hai, konsa plan multi-branch deta hai?"
+      ]
+    },
+    {
+      "issue_title": "App crashes on reports",
+      "category": "crash",
+      "frequency": 1,
+      "sample_messages": [
+        "Reports kholte hi app band ho jati hai"
+      ]
+    },
+    {
+      "issue_title": "Insufficient permissions for manager",
+      "category": "login",
+      "frequency": 1,
+      "sample_messages": [
+        "Manager discount approve nahi kar pa raha, permission error"
+      ]
+    },
+    {
+      "issue_title": "Wrong price on tablet vs admin",
+      "category": "menu",
+      "frequency": 1,
+      "sample_messages": [
+        "Combo deal ki price tablet pe galat hai"
+      ]
+    },
+    {
+      "issue_title": "Day-end report totals mismatch",
+      "category": "network",
+      "frequency": 1,
+      "sample_messages": [
+        "Day end report ka total match nahi kar raha"
+      ]
+    },
+    {
+      "issue_title": "Bluetooth printer pairing",
+      "category": "printer",
+      "frequency": 1,
+      "sample_messages": [
+        "Bluetooth printer dubara pair kaise karein?"
+      ]
+    },
+    {
+      "issue_title": "Printer general issues",
+      "category": "printer",
+      "frequency": 1,
+      "sample_messages": [
+        "printer"
+      ]
+    }
+  ]
+}
