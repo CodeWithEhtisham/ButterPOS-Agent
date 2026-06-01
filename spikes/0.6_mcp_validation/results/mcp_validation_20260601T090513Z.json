@@ -1,0 +1,54 @@
+{
+  "timestamp": "2026-06-01T09:05:08.244927+00:00",
+  "server": "butterpos_stub_mcp.py (Phase 0 placeholder)",
+  "transport": "stdio",
+  "tools_discovered": [
+    "get_system_info",
+    "check_printer",
+    "get_sales",
+    "add_menu_item"
+  ],
+  "direct_probe_pass": true,
+  "direct_probe_results": [
+    {
+      "tool_name": "get_system_info",
+      "arguments": {
+        "device_id": "tablet-spike-01"
+      },
+      "content": "{\n  \"device_id\": \"tablet-spike-01\",\n  \"app_version\": \"3.2.1\",\n  \"os\": \"Android 12\",\n  \"sync_status\": \"pending\",\n  \"last_sync_at\": \"2026-06-01T08:00:00Z\",\n  \"online\": true\n}",
+      "is_error": false
+    },
+    {
+      "tool_name": "check_printer",
+      "arguments": {
+        "branch_id": "branch-101"
+      },
+      "content": "{\n  \"branch_id\": \"branch-101\",\n  \"printer_name\": \"EPSON-TM-T88VI\",\n  \"status\": \"offline\",\n  \"connection\": \"bluetooth\",\n  \"last_print_at\": \"2026-06-01T07:45:00Z\",\n  \"suggested_action\": \"restart_printer\"\n}",
+      "is_error": false
+    },
+    {
+      "tool_name": "get_sales",
+      "arguments": {
+        "branch_id": "branch-101",
+        "date": "2026-06-01"
+      },
+      "content": "{\n  \"branch_id\": \"branch-101\",\n  \"date\": \"2026-06-01\",\n  \"order_count\": 47,\n  \"gross_total\": 125400.0,\n  \"currency\": \"PKR\"\n}",
+      "is_error": false
+    },
+    {
+      "tool_name": "add_menu_item",
+      "arguments": {
+        "branch_id": "branch-101",
+        "name": "Spike Test Item",
+        "price": 99.0,
+        "category": "Test"
+      },
+      "content": "{\n  \"success\": true,\n  \"item_id\": \"item-3\",\n  \"branch_id\": \"branch-101\",\n  \"name\": \"Spike Test Item\",\n  \"price\": 99.0,\n  \"category\": \"Test\",\n  \"message\": \"Added 'Spike Test Item' to branch branch-101\"\n}",
+      "is_error": false
+    }
+  ],
+  "llm_tests": [],
+  "llm_portability_pass": null,
+  "llm_skipped_reason": "OPENAI_API_KEY not set — LLM portability test skipped",
+  "error": null
+}

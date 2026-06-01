@@ -5,12 +5,13 @@ Step 0.2 — LLM Evaluation runner.
 Sends every query in dataset/support_queries.json through each candidate model
 via the LLMProvider interface, scores against D-5 bars, and picks primary + fallback.
 
-Required env: OPENAI_API_KEY
+Required env: OPENROUTER_API_KEY
 
 Usage:
   cd spikes/0.2_llm_eval
   python run_eval.py
-  python run_eval.py --models gpt-4o gpt-4o-mini --judge-model gpt-4o-mini
+  python run_eval.py --models openai/gpt-4o openai/gpt-4o-mini --judge-model openai/gpt-4o-mini
+  python run_eval.py --models anthropic/claude-3.5-sonnet google/gemini-2.0-flash-001
 """
 
 from __future__ import annotations
@@ -34,7 +35,7 @@ _SPIKE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(_SPIKE_DIR))
 
 from providers.base import LLMProvider, LLMRequest  # noqa: E402
-from providers.openai_provider import OpenAIProvider  # noqa: E402
+from providers.openrouter_provider import OpenRouterProvider  # noqa: E402
 
 RESULTS_DIR = _SPIKE_DIR / "results"
 DATASET_PATH = _SPIKE_DIR / "dataset" / "support_queries.json"
@@ -100,8 +101,8 @@ def load_dataset() -> dict[str, Any]:
 
 
 def build_provider(name: str, api_key: str) -> LLMProvider:
-    if name == "openai":
-        return OpenAIProvider(api_key=api_key)
+    if name == "openrouter":
+        return OpenRouterProvider(api_key=api_key)
     raise ValueError(f"Unknown provider: {name}")
 
 
@@ -310,12 +311,12 @@ def print_summary(report: EvalReport) -> None:
 
 async def run(args: argparse.Namespace) -> EvalReport:
     load_dotenv(_SPIKE_DIR.parents[1] / ".env")
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
-        raise SystemExit("Missing OPENAI_API_KEY in .env")
+        raise SystemExit("Missing OPENROUTER_API_KEY in .env")
 
     dataset = load_dataset()
-    provider = build_provider("openai", api_key)
+    provider = build_provider("openrouter", api_key)
 
     scorecards: list[ModelScorecard] = []
     for model in args.models:
@@ -332,7 +333,7 @@ async def run(args: argparse.Namespace) -> EvalReport:
     return EvalReport(
         timestamp=datetime.now(UTC).isoformat(),
         candidates_tested=list(args.models),
-        candidates_deferred=["google/gemini-*", "anthropic/claude-*"],
+        candidates_deferred=[],  # any OpenRouter slug can be passed via --models
         judge_model=args.judge_model,
         scorecards=scorecards,
         primary=primary,
@@ -346,13 +347,13 @@ def main() -> int:
     parser.add_argument(
         "--models",
         nargs="+",
-        default=["gpt-4o", "gpt-4o-mini"],
-        help="OpenAI models to evaluate (D-8: OpenAI only today)",
+        default=["openai/gpt-4o", "openai/gpt-4o-mini"],
+        help="OpenRouter model slugs to evaluate (e.g. openai/gpt-4o, anthropic/claude-3.5-sonnet)",
     )
     parser.add_argument(
         "--judge-model",
-        default="gpt-4o-mini",
-        help="Fixed judge for Roman Urdu scoring",
+        default="openai/gpt-4o-mini",
+        help="Fixed judge model slug for Roman Urdu scoring",
     )
     parser.add_argument("--skip-judge", action="store_true", help="Skip Roman Urdu judge (latency/cost only)")
     args = parser.parse_args()

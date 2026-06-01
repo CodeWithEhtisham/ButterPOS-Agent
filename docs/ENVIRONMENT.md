@@ -16,13 +16,17 @@ Configuration, credentials, and environment-specific settings.
 | `CHATWOOT_INBOX_ID` | Step 0.1+ | API-channel inbox ID |
 | `CHATWOOT_WEBHOOK_SECRET` | Phase 1 | HMAC secret for inbound webhook verification |
 
-### LLM (Step 0.2+)
+### LLM (Step 0.2+ — via OpenRouter, D-11)
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `OPENAI_API_KEY` | Step 0.2 | OpenAI API key (available per D-8) |
-| `GOOGLE_API_KEY` | When available | Gemini API key (deferred per D-8) |
-| `ANTHROPIC_API_KEY` | When available | Anthropic API key (deferred per D-8) |
+| `OPENROUTER_API_KEY` | Step 0.2+ | OpenRouter API key — single gateway for all LLM vendors |
+| `LLM_PRIMARY_MODEL` | Phase 1+ | Primary model slug, e.g. `openai/gpt-4o` |
+| `LLM_FALLBACK_MODEL` | Phase 1+ | Fallback model slug, e.g. `openai/gpt-4o-mini` |
+| `LLM_JUDGE_MODEL` | Eval | Fixed judge for Roman Urdu scoring, e.g. `openai/gpt-4o-mini` |
+| `OPENROUTER_APP_URL` | Optional | Attribution URL for OpenRouter |
+| `OPENROUTER_APP_NAME` | Optional | App name header (default: ButterPOS Support Agent) |
+| `OPENROUTER_BASE_URL` | Optional | Default `https://openrouter.ai/api/v1` |
 
 ### Assumption validation (Step 0.4)
 
@@ -58,12 +62,13 @@ Configuration, credentials, and environment-specific settings.
 |------------|------------|-----------------|---------|
 | Chatwoot API token | A4 | Chatwoot UI → Profile → Access Token | `.env` |
 | Chatwoot account/inbox IDs | A4 | Chatwoot dashboard / Settings → Inboxes | `.env` |
-| OpenAI API key | — | OpenAI platform dashboard | `.env` |
+| OpenRouter API key | — | [openrouter.ai/keys](https://openrouter.ai/keys) | `.env` → `OPENROUTER_API_KEY` |
 | Android repo access | A1 | ButterPOS mobile team — git URL or clone path | `.env` → `BUTTERPOS_ANDROID_REPO` |
 | DB read access | A2 | ButterPOS backend team — read-only Postgres user | `.env` → `DATABASE_URL` |
 | Data export file | A2 | ButterPOS backend team — CSV/JSON export | `.env` → `BUTTERPOS_DATA_EXPORT` |
 | Billing API | A3 | ButterPOS backend/billing team — API docs + token | `.env` → `BILLING_API_URL` |
-| MCP server | A5 | Backend teammate (Step 0.6) | `.env` → `MCP_SERVER_URL` |
+| MCP stub server | A5 / Step 0.6 | Local stdio subprocess — `spikes/0.6_mcp_validation/stub_server/` | Path in repo (no secret) |
+| MCP production server | A5 | Backend teammate (future) | `.env` → `MCP_SERVER_URL` |
 | WhatsApp export | A6 | Support team — 3–6 month chat export | `.env` → `WHATSAPP_EXPORT_PATH` |
 
 Never commit secrets. Reference by env var name only in docs and code.

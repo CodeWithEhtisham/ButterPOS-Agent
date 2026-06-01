@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-06-01T09:03:27.140969+00:00",
+  "server": "butterpos_stub_mcp.py (Phase 0 placeholder)",
+  "transport": "stdio",
+  "tools_discovered": [
+    "get_system_info",
+    "check_printer",
+    "get_sales",
+    "add_menu_item"
+  ],
+  "direct_probe_pass": false,
+  "direct_probe_results": [],
+  "llm_tests": [],
+  "llm_portability_pass": null,
+  "llm_skipped_reason": null,
+  "error": "too many values to unpack (expected 2)"
+}
