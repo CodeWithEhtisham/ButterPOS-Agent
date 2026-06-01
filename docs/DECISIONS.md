@@ -155,22 +155,27 @@ Phase 0 requires explicit sign-off on foundational assumptions before spikes and
 
 ### Decision
 
-All assumptions **A1–A7 signed off** as stated. Full validation evidence deferred to Step 0.4.
+Initial sign-off (2026-06-01). **Step 0.4 validation** (2026-06-01) adds evidence per assumption:
 
-| ID | Assumption | Status |
-|----|------------|--------|
-| A1 | ButterPOS Android/tablet app codebase access for embedded chat widget | Signed off |
-| A2 | Restaurant → Branch → User data accessible (DB read or validated export) | Signed off |
-| A3 | Billing/payment status source identifiable (`plan_type`, `payment_due`, `expiry`) | Signed off |
-| A4 | Chatwoot runs locally via Docker for dev/staging | Signed off |
-| A5 | MCP server owned by backend teammate; this repo is MCP client only | Signed off |
-| A6 | WhatsApp support history export available for KB audit (Step 0.3) | Signed off |
-| A7 | Chat path is widget → middleware → Chatwoot (not direct) | Signed off |
+| ID | Assumption | Validation status | Evidence |
+|----|------------|-------------------|----------|
+| A1 | Android/tablet app codebase access | **Blocked** | `BUTTERPOS_ANDROID_REPO` not set — need git URL or local path |
+| A2 | Restaurant → Branch → User data accessible | **Blocked** | `DATABASE_URL` or `BUTTERPOS_DATA_EXPORT` not set |
+| A3 | Billing/payment status source | **Blocked** | `BILLING_API_URL` not set — need billing API endpoint |
+| A4 | Chatwoot runs locally via Docker | **Verified** | Health OK at localhost:3000; Step 0.1 spike passed (mean 123ms) |
+| A5 | MCP server owned by backend teammate | **Manual** | Architectural split confirmed (D-4); `MCP_SERVER_URL` pending Step 0.6 |
+| A6 | WhatsApp export for KB audit | **Manual** | Step 0.3 tooling ready; production export not yet provided |
+| A7 | widget → middleware → Chatwoot | **Verified** | D-2 locked + Step 0.1 spike validates middleware→Chatwoot API path |
+
+Validation script: `spikes/0.4_assumption_validation/verify_assumptions.py`  
+Latest report: `spikes/0.4_assumption_validation/results/validation_report_*.json`
 
 ### Consequences
 
-- Step 0.4 will produce definitive Yes/No evidence for each assumption (scripts, credential checks, repo access verification).
-- Blocked assumptions discovered during Step 0.4 will be logged here as amendments.
+- **A1, A2, A3 blocked** — Phase 1 Tasks 1.6 (mapping) and 1.7 (seeding) cannot proceed without data source credentials.
+- **A5** — Step 0.6 blocked until backend teammate provides MCP server URL + tool catalog.
+- **A6** — Phase 2 KB gate (D-10) remains open until production WhatsApp export provided.
+- Re-run validation after adding env vars: `python spikes/0.4_assumption_validation/verify_assumptions.py`
 
 ---
 

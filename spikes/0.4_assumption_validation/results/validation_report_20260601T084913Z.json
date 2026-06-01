@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-06-01T08:49:13.090073+00:00",
+  "summary": {
+    "verified": 2,
+    "manual": 2,
+    "blocked": 3,
+    "failed": 0
+  },
+  "results": [
+    {
+      "id": "A1",
+      "assumption": "ButterPOS Android/tablet app codebase access for embedded chat widget",
+      "status": "blocked",
+      "evidence": "BUTTERPOS_ANDROID_REPO not set in .env",
+      "action_required": "Add git URL or local path to ButterPOS Android/tablet app repo"
+    },
+    {
+      "id": "A2",
+      "assumption": "Restaurant \u2192 Branch \u2192 User data accessible (DB read or validated export)",
+      "status": "blocked",
+      "evidence": "Neither DATABASE_URL nor BUTTERPOS_DATA_EXPORT set",
+      "action_required": "Add DATABASE_URL (read-only) or path to validated CSV/JSON export"
+    },
+    {
+      "id": "A3",
+      "assumption": "Billing/payment status source identifiable (plan_type, payment_due, expiry)",
+      "status": "blocked",
+      "evidence": "BILLING_API_URL not set",
+      "action_required": "Document billing API endpoint that exposes plan_type, payment_due, expiry (env: BILLING_API_URL)"
+    },
+    {
+      "id": "A4",
+      "assumption": "Chatwoot runs locally via Docker for dev/staging",
+      "status": "verified",
+      "evidence": "Chatwoot health OK at http://localhost:3000; API token authenticates; Step 0.1 spike passed (spike_report_20260601T083508Z.json): mean=123.48ms",
+      "action_required": null
+    },
+    {
+      "id": "A5",
+      "assumption": "MCP server owned by backend teammate; this repo is MCP client only",
+      "status": "manual",
+      "evidence": "MCP_SERVER_URL not set. Architectural split confirmed in D-4/D-5: backend teammate owns MCP server; this repo is client only. Full validation deferred to Step 0.6.",
+      "action_required": "Backend teammate to provide MCP server URL + tool list before Step 0.6"
+    },
+    {
+      "id": "A6",
+      "assumption": "WhatsApp support history export available for KB audit (Step 0.3)",
+      "status": "manual",
+      "evidence": "Production WhatsApp export not provided. Step 0.3 categorizer ready; sample data only (sample_messages.json).",
+      "action_required": "Provide 3\u20136 month WhatsApp export for production KB MVP (Step 0.3)"
+    },
+    {
+      "id": "A7",
+      "assumption": "Chat path is widget \u2192 middleware \u2192 Chatwoot (not direct)",
+      "status": "verified",
+      "evidence": "D-2 locked: widget \u2192 middleware \u2192 Chatwoot (no direct widget\u2192Chatwoot); Step 0.1 spike validates middleware\u2192Chatwoot Application API path; DECISIONS.md D-2 documents architecture",
+      "action_required": null
+    }
+  ],
+  "phase_0_assumptions_gate": false
+}
