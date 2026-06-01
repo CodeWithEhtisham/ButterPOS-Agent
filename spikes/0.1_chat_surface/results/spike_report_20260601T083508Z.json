@@ -1,0 +1,90 @@
+{
+  "timestamp": "2026-06-01T08:35:07.296573+00:00",
+  "config_summary": {
+    "base_url": "http://localhost:3000",
+    "account_id": 1,
+    "inbox_id": 1,
+    "rounds": 5,
+    "contact_id": 2,
+    "conversation_id": 2
+  },
+  "latency": [
+    {
+      "round_num": 1,
+      "post_ms": 136.5,
+      "read_back_ms": 39.3,
+      "total_ms": 175.8,
+      "message_id": 9
+    },
+    {
+      "round_num": 2,
+      "post_ms": 65.5,
+      "read_back_ms": 39.21,
+      "total_ms": 104.71,
+      "message_id": 10
+    },
+    {
+      "round_num": 3,
+      "post_ms": 64.24,
+      "read_back_ms": 41.45,
+      "total_ms": 105.69,
+      "message_id": 11
+    },
+    {
+      "round_num": 4,
+      "post_ms": 79.93,
+      "read_back_ms": 40.18,
+      "total_ms": 120.12,
+      "message_id": 13
+    },
+    {
+      "round_num": 5,
+      "post_ms": 68.01,
+      "read_back_ms": 43.05,
+      "total_ms": 111.06,
+      "message_id": 14
+    }
+  ],
+  "latency_summary": {
+    "samples": 5,
+    "min_ms": 104.71,
+    "max_ms": 175.8,
+    "mean_ms": 123.48,
+    "median_ms": 111.06,
+    "target_ms": 5000,
+    "target_met": true
+  },
+  "capabilities": [
+    {
+      "feature": "Plain text message",
+      "content_type": "text",
+      "status": "pass",
+      "notes": "Baseline outgoing text via Application API.",
+      "message_id": 15
+    },
+    {
+      "feature": "Quick replies (input_select)",
+      "content_type": "input_select",
+      "status": "pass",
+      "notes": "Chatwoot Web Widget / API channel interactive select.",
+      "message_id": 16
+    },
+    {
+      "feature": "Action buttons (cards postback)",
+      "content_type": "cards",
+      "status": "pass",
+      "notes": "Card with postback action \u2014 middleware receives selection via webhook.",
+      "message_id": 17
+    },
+    {
+      "feature": "Inline form",
+      "content_type": "form",
+      "status": "pass",
+      "notes": "Structured input collection in widget.",
+      "message_id": 18
+    }
+  ],
+  "latency_target_ms": 5000,
+  "latency_target_met": true,
+  "error": null
+}

@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-06-01T08:29:34.033352+00:00",
+  "config_summary": {
+    "base_url": "http://localhost:3000",
+    "account_id": 1,
+    "inbox_id": 1,
+    "rounds": 3
+  },
+  "latency": [],
+  "latency_summary": {},
+  "capabilities": [],
+  "latency_target_ms": 5000,
+  "latency_target_met": null,
+  "error": "HTTP error: Client error '401 Unauthorized' for url 'http://localhost:3000/api/v1/accounts/1/contacts'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401"
+}

@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-06-01T08:34:17.092608+00:00",
+  "config_summary": {
+    "base_url": "http://localhost:3000",
+    "account_id": 1,
+    "inbox_id": 1,
+    "rounds": 3,
+    "contact_id": 1,
+    "conversation_id": 1
+  },
+  "latency": [
+    {
+      "round_num": 1,
+      "post_ms": 195.96,
+      "read_back_ms": 36.25,
+      "total_ms": 232.21,
+      "message_id": 1
+    },
+    {
+      "round_num": 2,
+      "post_ms": 69.19,
+      "read_back_ms": 39.29,
+      "total_ms": 108.48,
+      "message_id": 2
+    },
+    {
+      "round_num": 3,
+      "post_ms": 66.15,
+      "read_back_ms": 40.63,
+      "total_ms": 106.78,
+      "message_id": 3
+    }
+  ],
+  "latency_summary": {
+    "samples": 3,
+    "min_ms": 106.78,
+    "max_ms": 232.21,
+    "mean_ms": 149.16,
+    "median_ms": 108.48,
+    "target_ms": 5000,
+    "target_met": true
+  },
+  "capabilities": [
+    {
+      "feature": "Plain text message",
+      "content_type": "text",
+      "status": "pass",
+      "notes": "Baseline outgoing text via Application API.",
+      "message_id": 4
+    },
+    {
+      "feature": "Quick replies (input_select)",
+      "content_type": "input_select",
+      "status": "pass",
+      "notes": "Chatwoot Web Widget / API channel interactive select.",
+      "message_id": 5
+    },
+    {
+      "feature": "Action buttons (cards postback)",
+      "content_type": "cards",
+      "status": "pass",
+      "notes": "Card with postback action \u2014 middleware receives selection via webhook.",
+      "message_id": 6
+    },
+    {
+      "feature": "Inline form",
+      "content_type": "form",
+      "status": "pass",
+      "notes": "Structured input collection in widget.",
+      "message_id": 7
+    }
+  ],
+  "latency_target_ms": 5000,
+  "latency_target_met": true,
+  "error": null
+}

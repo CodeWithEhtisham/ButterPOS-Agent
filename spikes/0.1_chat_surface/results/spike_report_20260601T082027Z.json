@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-06-01T08:20:27.323192+00:00",
+  "config_summary": {},
+  "latency": [],
+  "latency_summary": {},
+  "capabilities": [],
+  "latency_target_ms": 5000,
+  "latency_target_met": null,
+  "error": "Missing required env vars: CHATWOOT_BASE_URL, CHATWOOT_API_TOKEN, CHATWOOT_ACCOUNT_ID, CHATWOOT_INBOX_ID\nAdd them to .env (see spikes/0.1_chat_surface/README.md)."
+}
