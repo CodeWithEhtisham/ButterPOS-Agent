@@ -6,28 +6,40 @@ Model Context Protocol client contract for the ButterPOS AI Support Agent middle
 
 ## Ownership split
 
-<!-- TBD: Backend teammate owns MCP server; this repo is MCP client only. -->
+<!-- TBD Step 0.6: Backend teammate owns MCP server; this repo is MCP client only. -->
 
 ---
 
 ## Transport
 
-<!-- TBD: Server URL, transport type (stdio/SSE/HTTP), connection lifecycle. -->
+<!-- TBD Step 0.6: Server URL, transport type (stdio/SSE/HTTP), connection lifecycle. -->
 
 ---
 
 ## Auth
 
-<!-- TBD: Authentication method, credential storage, token refresh if applicable. -->
+<!-- TBD Step 0.6: Authentication method, credential storage, token refresh if applicable. -->
 
 ---
 
 ## Tool catalog
 
-<!-- TBD: Tool names, descriptions, tier classification (read-only vs fix vs escalate). -->
+<!-- TBD Step 0.6: Tool names, descriptions, tier classification (read-only vs fix vs escalate). -->
 
 ---
 
 ## Request/response shapes
 
-<!-- TBD: Input schemas, output schemas, error formats, example calls. -->
+<!-- TBD Step 0.6: Input schemas, output schemas, error formats, example calls. -->
+
+---
+
+## LLM provider compatibility (Step 0.2)
+
+Tool-calling in Step 0.6 must be validated against the **primary and fallback models chosen in D-9**. Requirements:
+
+- Both models must support OpenAI-style `tools` / function-calling (used by MCP client bridge).
+- Switching primary → fallback in config must fire the **same MCP tools with no code change** (D-4 portability rationale).
+- When Gemini/Anthropic keys become available (D-8), repeat Step 0.6 validation for each new provider adapter before promoting to fallback.
+
+**Primary/fallback models:** see D-9 in `DECISIONS.md` (pending live eval).

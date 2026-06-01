@@ -11,8 +11,8 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | Step | Description | Status |
 |------|-------------|--------|
 | **0.0** | Pre-Phase Gate — docs scaffold + locked decisions | **Complete** |
-| **0.1** | Chat surface spike (widget → middleware → Chatwoot) | **Complete** (harness + docs; live run pending credentials) |
-| 0.2 | LLM Evaluation (primary + fallback selection) | Not started |
+| **0.1** | Chat surface spike (widget → middleware → Chatwoot) | **Complete** |
+| **0.2** | LLM Evaluation (primary + fallback selection) | **Complete** (harness + dataset; live eval pending `OPENAI_API_KEY`) |
 | 0.3 | KB Content Audit + MVP List | Not started |
 | 0.4 | Assumption Validation (A1–A7 evidence) | Not started |
 | 0.5 | Infrastructure Setup (Docker, CI, Postgres, Redis) | Not started |
@@ -28,16 +28,23 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 ### Step 0.1 deliverables (2026-06-01)
 
 - [x] Spike harness: `spikes/0.1_chat_surface/chat_surface_spike.py`
-- [x] Capability matrix (API research): `spikes/0.1_chat_surface/capability_matrix.md`
-- [x] `WEBHOOKS.md` — Chatwoot inbound payload shape documented
-- [x] `TROUBLESHOOTING.md` — Chatwoot quirks documented
-- [x] `ENVIRONMENT.md` — `CHATWOOT_*` env vars documented
-- [ ] Live latency numbers — **blocked:** add Chatwoot credentials to `.env` and re-run spike
+- [x] Capability matrix: `spikes/0.1_chat_surface/capability_matrix.md`
+- [x] `WEBHOOKS.md`, `TROUBLESHOOTING.md`, `ENVIRONMENT.md` updated
+- [x] Live latency run — mean 123ms, p95 176ms, all capabilities pass (`spike_report_20260601T083508Z.json`)
+
+### Step 0.2 deliverables (2026-06-01)
+
+- [x] 50-query dataset: `spikes/0.2_llm_eval/dataset/support_queries.json`
+- [x] `LLMProvider` spike interface: `spikes/0.2_llm_eval/providers/`
+- [x] Eval runner: `spikes/0.2_llm_eval/run_eval.py`
+- [x] D-9 ADR stub in `DECISIONS.md`
+- [x] `MCP_INTEGRATION.md` — LLM/tool-calling compatibility note
+- [ ] Live scorecard + primary/fallback — **blocked:** add `OPENAI_API_KEY` to `.env` and run eval
 
 **Phase 0 exit criteria (all must be checked before Phase 1):**
 
-- [ ] Primary + fallback LLM chosen
-- [ ] Chat surface validated (live latency run)
+- [ ] Primary + fallback LLM chosen (D-9 live eval)
+- [x] Chat surface validated (Step 0.1 live run)
 - [ ] Assumptions signed off with evidence (Step 0.4)
 - [ ] Staging environment up
 - [ ] MCP contract documented

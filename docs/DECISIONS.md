@@ -16,6 +16,7 @@ Living record of every architectural choice and why it was made. When the Team L
 | D-6 | LLM provider set: paid cloud only; Ollama deferred | Locked |
 | D-7 | Assumptions A1–A7 | Resolved (2026-06-01) |
 | D-8 | Provider API keys available today | Resolved (2026-06-01) |
+| D-9 | Primary + fallback LLM model | Pending (Step 0.2 — live eval blocked on `OPENAI_API_KEY`) |
 
 ---
 
@@ -193,3 +194,47 @@ Step 0.2 (LLM Evaluation) can only score providers the team can authenticate aga
 - Step 0.2 runs full evaluation against OpenAI only initially.
 - Gemini and Anthropic are documented as "test when key available"; primary/fallback selection may be updated when additional keys are obtained.
 - Fallback selection in Step 0.2 may be limited to OpenAI model variants until a second provider key is available.
+
+---
+
+## D-9 — Primary + fallback LLM model
+
+**Status:** Pending — harness ready; live eval blocked until `OPENAI_API_KEY` is set in `.env`
+
+### Context
+
+Step 0.2 evaluates OpenAI models (`gpt-4o`, `gpt-4o-mini`) against a 50-query ButterPOS support dataset through the `LLMProvider` interface. Scoring uses D-5 bars: Roman Urdu ≥75% acceptable (fixed judge model), latency p95 <8s, cost per 1K tokens.
+
+Gemini and Anthropic deferred per D-8.
+
+### Decision
+
+_Pending live eval run._ Expected selection logic (implemented in `spikes/0.2_llm_eval/run_eval.py`):
+
+1. **Primary** — among models passing all D-5 bars, highest Roman Urdu acceptability; tie-break lower latency.
+2. **Fallback** — among remaining D-5 passers, lowest cost per 1K tokens.
+
+### Candidates
+
+| Model | Provider | Eval status |
+|-------|----------|-------------|
+| `gpt-4o` | OpenAI | Pending |
+| `gpt-4o-mini` | OpenAI | Pending |
+| Gemini | Google | Deferred (D-8) |
+| Claude | Anthropic | Deferred (D-8) |
+
+### Consequences
+
+- Phase 1 `LLMProvider` factory will default to D-9 primary model.
+- MCP tool-calling validation (Step 0.6) must confirm chosen models support function/tool calls.
+- Re-run eval when Gemini/Anthropic keys arrive to validate cross-provider fallback.
+
+### How to complete
+
+```bash
+# Add OPENAI_API_KEY to .env (never commit)
+cd spikes/0.2_llm_eval && ../../.venv/bin/pip install openai
+../../.venv/bin/python run_eval.py
+```
+
+Update this ADR with scorecard numbers from `results/eval_report_*.json`.
