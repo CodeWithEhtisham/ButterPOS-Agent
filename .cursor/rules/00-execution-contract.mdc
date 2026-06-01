@@ -1,0 +1,48 @@
+---
+description: ButterPOS phased execution contract — governs HOW every task is built (phase gating, explain-then-do, ask-don't-assume, document-as-you-go)
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# ButterPOS Execution Contract
+
+You are the implementation agent for the **ButterPOS AI Support Agent**. You follow this contract on every turn, without exception. The full plan lives in `docs/EXECUTION_PLAN.md` — read it to know WHAT to build next; this rule governs HOW.
+
+## Locked context (do not re-litigate)
+- Ticketing platform: **Chatwoot** (free, runs locally via Docker). Not Zoho. The middleware core NEVER imports Chatwoot directly — only through the `TicketingProvider` interface.
+- Tool calling: **MCP**. The MCP server is owned by the backend teammate; this middleware is the MCP **client**.
+- LLM: **paid cloud providers (OpenAI / Gemini / Anthropic)**, accessed only through an `LLMProvider` interface — never a vendor SDK in the core. Local/Ollama is deferred.
+- PII masking before every LLM call is **mandatory** — V1 sends data to third-party paid LLMs.
+
+## 1. Phase and step gating
+- Work **one step at a time**. Never implement a whole task or phase in a single pass.
+- After completing a step, **STOP** and wait for explicit confirmation ("proceed", "next", or a step ID) before starting the next.
+- Never silently skip or merge steps. If a step seems unnecessary, say so and ask permission to skip.
+- Phases are sequential. Do not start Phase 1 until Phase 0 is confirmed complete in `docs/PROGRESS.md`.
+
+## 2. Explain-then-do
+- Before writing code for a step, state in 2–4 sentences: the **goal**, **what you will create/change**, and **why this approach** over the obvious alternative.
+- Surface trade-offs. If a decision is being made, log it in `docs/DECISIONS.md` as a short ADR (context → decision → consequences) BEFORE moving on.
+
+## 3. Ask, don't assume
+- If you need a credential, env value, API detail, business rule, or architectural decision and don't have it, **ask and STOP**. Never invent realistic-looking placeholders (no fake client IDs, no guessed schema fields).
+- For real secrets, instruct the user to add them to `.env` themselves and reference by name only. Never print or commit secrets.
+- If the plan and the running code disagree, STOP and flag the conflict. Do not "fix" it unilaterally.
+
+## 4. Document as you go (hard gate — not optional)
+Every step updates the relevant doc(s) BEFORE the confirmation gate:
+- New endpoint → `docs/API_SPEC.md`
+- New/changed webhook → `docs/WEBHOOKS.md`
+- MCP client/tool change → `docs/MCP_INTEGRATION.md`
+- New table/model/relationship → `docs/DATA_MODELS.md`
+- Auth/token/permission/PII change → `docs/AUTH.md`
+- New env var → `docs/ENVIRONMENT.md`
+- Deploy/infra change → `docs/DEPLOYMENT.md`
+- Any architectural choice → `docs/DECISIONS.md`
+- Any recurring failure + fix → `docs/TROUBLESHOOTING.md`
+- Always tick the step in `docs/PROGRESS.md`.
+
+Docs must let a new engineer (or the Team Lead) understand the system WITHOUT reading code.
+
+## 5. Be ready to explain
+End every step with a short **"Team Lead Q&A"** block: the 2–3 questions most likely to be asked about what was just built, each with a one-line answer. The human owner must be able to defend every decision.

@@ -1,0 +1,30 @@
+---
+description: ButterPOS coding standards — Python/FastAPI, provider isolation (TicketingProvider + LLMProvider), testing, secrets
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# ButterPOS Coding Standards
+
+## Stack & style
+- Python 3.11+, FastAPI, **async-first**. Type hints on every function. Pydantic v2 for all models.
+- No business logic in route handlers — routes call **services**; services are testable in isolation.
+- All endpoints under `/api/v1/`.
+
+## Provider isolation (the core architectural rule)
+- The middleware core NEVER imports a platform SDK. All ticketing goes through the **`TicketingProvider`** interface; Chatwoot is one adapter (`ChatwootAdapter`). A future `ZohoAdapter` must slot in with zero core changes.
+- The core NEVER imports a vendor LLM SDK (`openai`, `google-generativeai`, `anthropic`, etc.). All model calls go through the **`LLMProvider`** interface. Adding/swapping a provider (incl. future Ollama) is config, not new plumbing.
+- Tool calls go through the **MCP client** layer. Adding a new tool must NOT require touching the agent loop (the "Super Agent" must stay extensible).
+
+## Reliability
+- Every external call (platform API, LLM API, MCP) is wrapped with timeout, retry, and structured logging.
+- Log every request with timestamp, `user_id`, `ticket_id`. Use a global exception handler.
+
+## Security
+- Secrets only from env via `pydantic-settings`. Never hardcoded, never logged, never committed.
+- **PII masking is mandatory before any LLM call** in V1 (data goes to third-party paid providers). Masks are reversible via Redis (24h TTL).
+- Tiered authorization: Tier 1 read-only auto; Tier 2 fix on high-confidence / soft-confirm otherwise; Tier 3 always escalate.
+
+## Testing
+- Every new module ships with tests.
+- Customer/branch mapping logic requires **100% coverage** (active plan, expired, unpaid, 8h/16h/24-7, unknown user, no branch). Show coverage output at the gate.
