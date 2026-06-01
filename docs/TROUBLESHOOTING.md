@@ -49,5 +49,6 @@ Creating a conversation via Application API requires a `source_id` (unique per c
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | Spike exits: missing env vars | `.env` not configured | Add `CHATWOOT_*` vars per `ENVIRONMENT.md` |
+| `docker compose` port bind failed | Host ports 5432/6379 already in use | Use `POSTGRES_PORT=15432` `REDIS_PORT=16379` and update URLs in `.env` |
 | HTTP 401 from Chatwoot | Invalid or expired API token | Regenerate token in Chatwoot Profile → Access Token |
 | HTTP 404 on conversation | Wrong `account_id` or conversation deleted | Verify IDs in Chatwoot dashboard URL |

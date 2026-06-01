@@ -6,7 +6,6 @@ import time
 from typing import Any
 
 from openai import AsyncOpenAI
-
 from providers.base import LLMProvider, LLMRequest, LLMResponse
 
 # USD per 1M tokens (input, output) — update when OpenAI pricing changes

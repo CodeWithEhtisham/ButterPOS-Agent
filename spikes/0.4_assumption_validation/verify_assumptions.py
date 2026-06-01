@@ -26,7 +26,6 @@ import argparse
 import json
 import os
 import subprocess
-import sys
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -157,7 +156,6 @@ def check_a2_data_access() -> CheckResult:
         if path.exists():
             try:
                 count, summary = _load_data_export(path)
-                required_fields = {"plan_type", "payment_due", "expiry", "restaurant", "branch"}
                 # Soft check — report what we found
                 return CheckResult(
                     id="A2",

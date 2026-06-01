@@ -1,0 +1,3 @@
+# Dev / CI tooling (not required in production container)
+pytest==8.*
+ruff==0.9.*

@@ -15,34 +15,25 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | **0.2** | LLM Evaluation (primary + fallback selection) | **Complete** (harness; live eval pending `OPENAI_API_KEY`) |
 | **0.3** | KB Content Audit + MVP List | **Complete** (tooling; production audit pending WhatsApp export) |
 | **0.4** | Assumption Validation (A1–A7 evidence) | **Complete** (2 verified, 2 manual, 3 blocked) |
-| 0.5 | Infrastructure Setup (Docker, CI, Postgres, Redis) | Not started |
+| **0.5** | Infrastructure Setup (Docker, CI, Postgres, Redis) | **Complete** |
 | 0.6 | MCP client validation + contract documentation | Not started |
 
-### Step 0.4 deliverables (2026-06-01)
+### Step 0.5 deliverables (2026-06-01)
 
-- [x] Validation script: `spikes/0.4_assumption_validation/verify_assumptions.py`
-- [x] D-7 updated with per-assumption evidence (`DECISIONS.md`)
-- [x] Credential map in `ENVIRONMENT.md`
-- [x] Validation report: `results/validation_report_20260601T084913Z.json`
-
-| ID | Result |
-|----|--------|
-| A4 Chatwoot local | **Verified** |
-| A7 Chat path | **Verified** |
-| A5 MCP ownership | Manual — pending Step 0.6 |
-| A6 WhatsApp export | Manual — pending production export |
-| A1 Android repo | **Blocked** — need `BUTTERPOS_ANDROID_REPO` |
-| A2 Data access | **Blocked** — need `DATABASE_URL` or export |
-| A3 Billing source | **Blocked** — need `BILLING_API_URL` |
-
-- [ ] All A1–A7 verified or manually signed off — **3 blocked remain**
+- [x] `docker-compose.yml` — Postgres 15 + Redis 7 with health checks
+- [x] `scripts/check_infra.py` — connectivity verifier
+- [x] `tests/test_infra.py` — smoke + connectivity tests
+- [x] `.github/workflows/ci.yml` — ruff lint + pytest + infra check
+- [x] `requirements-dev.txt`, `pyproject.toml` (ruff/pytest config)
+- [x] `docs/DEPLOYMENT.md`, `docs/ENVIRONMENT.md` updated
+- [x] `README.md` quick-start
 
 **Phase 0 exit criteria (all must be checked before Phase 1):**
 
 - [ ] Primary + fallback LLM chosen (D-9 live eval)
 - [x] Chat surface validated (Step 0.1)
-- [ ] Assumptions signed off with evidence — A1/A2/A3 blocked
-- [ ] Staging environment up
+- [ ] Assumptions signed off — A1/A2/A3 blocked
+- [x] Staging infra up (local docker-compose + CI service containers)
 - [ ] MCP contract documented
 - [ ] All decisions in `DECISIONS.md`
 

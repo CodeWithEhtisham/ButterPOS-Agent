@@ -38,7 +38,17 @@ Configuration, credentials, and environment-specific settings.
 
 ### Infrastructure (Step 0.5+ / Phase 1)
 
-<!-- TBD: REDIS_URL, JWT_SECRET, TICKETING_PROVIDER, etc. -->
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `POSTGRES_USER` | Step 0.5 | Postgres username (default: `butterpos`) |
+| `POSTGRES_PASSWORD` | Step 0.5 | Postgres password (default: `butterpos`) |
+| `POSTGRES_DB` | Step 0.5 | Database name (default: `butterpos`) |
+| `POSTGRES_PORT` | Step 0.5 | Host port mapping (default: `5432`) |
+| `DATABASE_URL` | Step 0.5+ | SQLAlchemy URL, e.g. `postgresql+asyncpg://butterpos:butterpos@localhost:5432/butterpos` |
+| `REDIS_PORT` | Step 0.5 | Host port mapping (default: `6379`) |
+| `REDIS_URL` | Step 0.5+ | Redis URL, e.g. `redis://localhost:6379/0` |
+
+<!-- Phase 1 TBD: JWT_SECRET, TICKETING_PROVIDER, CELERY_BROKER_URL, etc. -->
 
 ---
 
@@ -64,9 +74,9 @@ Never commit secrets. Reference by env var name only in docs and code.
 
 | Setting | Local | Staging |
 |---------|-------|---------|
-| `CHATWOOT_BASE_URL` | `http://localhost:3000` | TBD (Step 0.5) |
-| `DATABASE_URL` | TBD (Step 0.5 docker-compose) | TBD |
-| ButterPOS production DB | Not used locally — export or read replica | TBD |
+| `CHATWOOT_BASE_URL` | `http://localhost:3000` | TBD — confirm VPS vs internal |
+| `DATABASE_URL` | `postgresql+asyncpg://butterpos:butterpos@localhost:5432/butterpos` | TBD (Step 0.5 docker-compose locally; staging host TBD) |
+| `REDIS_URL` | `redis://localhost:6379/0` | TBD |
 
 ---
 

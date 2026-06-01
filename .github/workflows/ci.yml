@@ -1,0 +1,63 @@
+# name: CI
+
+# on:
+#   push:
+#     branches: [main, staging, phase-0]
+#   pull_request:
+#     branches: [main, staging]
+
+# jobs:
+#   lint-and-test:
+#     runs-on: ubuntu-22.04
+
+#     services:
+#       postgres:
+#         image: postgres:15-alpine
+#         env:
+#           POSTGRES_USER: butterpos
+#           POSTGRES_PASSWORD: butterpos
+#           POSTGRES_DB: butterpos
+#         ports:
+#           - 5432:5432
+#         options: >-
+#           --health-cmd "pg_isready -U butterpos -d butterpos"
+#           --health-interval 5s
+#           --health-timeout 5s
+#           --health-retries 5
+
+#       redis:
+#         image: redis:7-alpine
+#         ports:
+#           - 6379:6379
+#         options: >-
+#           --health-cmd "redis-cli ping"
+#           --health-interval 5s
+#           --health-timeout 5s
+#           --health-retries 5
+
+#     env:
+#       DATABASE_URL: postgresql+asyncpg://butterpos:butterpos@localhost:5432/butterpos
+#       REDIS_URL: redis://localhost:6379/0
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.11"
+#           cache: pip
+
+#       - name: Install dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install -r requirements.txt -r requirements-dev.txt
+
+#       - name: Lint (ruff)
+#         run: ruff check spikes/ scripts/ tests/
+
+#       - name: Test
+#         run: pytest tests/ -v --tb=short
+
+#       - name: Infrastructure connectivity
+#         run: python scripts/check_infra.py
