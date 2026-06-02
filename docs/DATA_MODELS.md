@@ -206,6 +206,62 @@ Strict Pydantic schemas for these payloads are deferred to the agent loop (Phase
 
 ---
 
+## Tables (Task 1.2.4)
+
+ORM models: `app/db/models/kb_article.py`, `app/db/models/kb_article_version.py`. Migrations: Task 1.2.6.
+
+### Entity relationship
+
+```
+KBArticle 1 ──< KBArticleVersion (immutable snapshots, ordered by version_number)
+```
+
+Live content lives on `kb_articles` for fast RAG retrieval. Every edit appends a `kb_article_versions` row; rollback copies a prior snapshot forward as a new version (never mutates history).
+
+### `kb_articles`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint PK | Internal id (TimestampMixin) |
+| `slug` | varchar(128) unique | URL-safe identifier for lookup / RAG |
+| `title` | varchar(255) | Display title (current) |
+| `category` | varchar(64) | e.g. `network`, `printer`, `billing` (from MVP audit) |
+| `status` | varchar(16) | `draft`, `published`, `archived` |
+| `content_en` | text | Current English body |
+| `content_ur` | text nullable | Current Roman Urdu / Urdu body |
+| `current_version` | integer | Latest version number (matches newest snapshot) |
+| `author` | varchar(128) nullable | Content owner (from MVP sheet) |
+| `roman_urdu_needed` | boolean | Flag from Step 0.3 MVP template |
+| `tags` | jsonb | Search/classification labels |
+| `published_at` | timestamptz nullable | When first/last published |
+| `created_at` / `updated_at` | timestamptz | TimestampMixin |
+
+### `kb_article_versions`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint PK | Internal id |
+| `article_id` | FK → kb_articles | Parent article |
+| `version_number` | integer | Monotonic per article; unique with `article_id` |
+| `title` | varchar(255) | Title at time of edit |
+| `content_en` | text | English body snapshot |
+| `content_ur` | text nullable | Urdu body snapshot |
+| `change_summary` | varchar(512) nullable | Human-readable edit note |
+| `edited_by` | varchar(128) nullable | Editor identity |
+| `created_at` / `updated_at` | timestamptz | TimestampMixin (`updated_at` unused — rows are immutable) |
+
+**Unique constraint:** `(article_id, version_number)` — prevents duplicate version numbers.
+
+### Versioning workflow (Phase 2 services)
+
+1. **Create** — insert article + version `1`.
+2. **Edit** — update live columns on `kb_articles`, increment `current_version`, append new version row.
+3. **Rollback** — load version *N*, write as version *N+1* with summary `"Rollback to vN"`, update live columns.
+
+Bilingual RAG (Phase 2) reads `content_en` / `content_ur` based on user `language_pref`.
+
+---
+
 ## Relationships
 
 See entity diagram above. Cascade: deleting a restaurant removes branches; branch delete sets user `branch_id` NULL.
