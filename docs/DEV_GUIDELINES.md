@@ -21,21 +21,29 @@ Coding standards, project layout, testing, and logging conventions.
 app/
   main.py                 # FastAPI factory (`create_app`)
   core/
-    config.py             # Settings from `.env` (Task 1.1.1)
+    config.py             # Settings from `.env`
+    context.py            # Request-scoped logging context
+    logging_config.py     # JSON structured logging
+    error_handlers.py     # Global exception handlers
+    exceptions.py         # AppError
+    pii/                  # PII mask/unmask (Task 1.1.7)
+    security.py           # JWT helpers
   api/
     deps.py               # FastAPI dependencies
-    v1/                   # All routes under /api/v1/ (Task 1.1.3+)
-  services/               # Business logic (Task 1.x+)
+    middleware/           # Request logging middleware
+    v1/                   # All routes under /api/v1/
+  services/               # Business logic
   providers/
-    ticketing/            # TicketingProvider + adapters (Task 1.1.4, 1.3)
-    llm/                  # LLMProvider + OpenRouter adapter (Phase 2+)
-  models/                 # Pydantic Standard* + SQLAlchemy ORM (Task 1.1.5, 1.2)
+    ticketing/            # TicketingProvider + adapters
+    llm/                  # LLMProvider (Phase 2+)
+  models/                 # Pydantic Standard* + ORM (Task 1.2+)
+  schemas/                # API request/response schemas
 
-tests/                    # pytest — mirror app modules
-spikes/                   # Phase 0 experiments (not imported by app)
-scripts/                  # Ops helpers (infra check, seeding)
-docs/                     # Living documentation (update every step)
-alembic/                  # DB migrations (Task 1.2)
+tests/
+spikes/
+scripts/
+docs/
+alembic/                  # Task 1.2+
 ```
 
 **Rules:**
@@ -49,13 +57,8 @@ alembic/                  # DB migrations (Task 1.2)
 ## Running locally
 
 ```bash
-# Install deps
 pip install -r requirements.txt -r requirements-dev.txt
-
-# Start infra (Postgres + Redis)
 docker compose up -d
-
-# Run API (Task 1.1+)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -80,4 +83,50 @@ Customer/branch mapping (`Task 1.6`) requires **100% coverage** on mapping logic
 
 ## Logging
 
-Structured logging and global exception handler — **Task 1.1 sub-step 8**. Every request must log timestamp, `user_id`, `ticket_id` when available.
+**Task 1.1.8** — JSON structured logs to stdout; every HTTP request logged with correlation context.
+
+### Log format
+
+Each line is a JSON object:
+
+```json
+{
+  "timestamp": "2026-06-02T12:00:00+00:00",
+  "level": "INFO",
+  "logger": "app.request",
+  "message": "request_completed method=GET path=/api/v1/auth/me ...",
+  "request_id": "uuid",
+  "user_id": "staff-123",
+  "ticket_id": null,
+  "method": "GET",
+  "path": "/api/v1/auth/me",
+  "status_code": 200,
+  "duration_ms": 4.2
+}
+```
+
+### Request context
+
+| Field | Source |
+|-------|--------|
+| `request_id` | Generated per request; returned as `X-Request-ID` header |
+| `user_id` | JWT `sub` when Bearer token present and valid |
+| `ticket_id` | Path `ticket_id` / `provider_ticket_id` or query `ticket_id` |
+
+Services may call `set_ticket_id()` from `app.core.context` when ticket is resolved later in the handler.
+
+### Modules
+
+| Module | Role |
+|--------|------|
+| `app/core/logging_config.py` | JSON formatter + `configure_logging()` |
+| `app/core/context.py` | `contextvars` for request scope |
+| `app/api/middleware/request_logging.py` | Per-request access logs |
+| `app/core/error_handlers.py` | Global HTTP / AppError / 500 handlers |
+| `app/core/exceptions.py` | `AppError` base class |
+
+### Rules
+
+- Never log cleartext PII or Redis mask token values.
+- Unhandled errors return generic `"Internal server error"` unless `DEBUG=true`.
+- Set `LOG_LEVEL` in `.env` (default `INFO`).

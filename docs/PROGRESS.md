@@ -39,7 +39,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 
 | Task | Description | Status |
 |------|-------------|--------|
-| **1.1** | FastAPI + `TicketingProvider` interface | **In progress** |
+| **1.1** | FastAPI + `TicketingProvider` interface | **Complete** (2026-06-02) |
 | 1.2 | PostgreSQL schema + migrations | Not started |
 | 1.3 | `ChatwootAdapter` | Not started |
 | 1.4 | Webhook receiver + `StandardEvent` parser | Not started |
@@ -58,7 +58,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 5 | Standard models (`StandardEvent`, etc.) | **Complete** (2026-06-02) |
 | 6 | Provider factory | **Complete** (2026-06-02) |
 | 7 | PII masking / de-masking | **Complete** (2026-06-02) |
-| 8 | Structured logging + global exception handler | Not started |
+| 8 | Structured logging + global exception handler | **Complete** (2026-06-02) |
 
 **Phase 1 exit criteria:**
 
