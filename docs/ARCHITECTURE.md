@@ -40,6 +40,34 @@ The **factory** reads `TICKETING_PROVIDER` from env and returns the correct adap
 
 Configuration: `app/core/config.py` (`Settings` via pydantic-settings).
 
+### TicketingProvider (Task 1.1.4)
+
+Abstract interface in `app/providers/ticketing/base.py` — **11 async methods**:
+
+| Method | Purpose |
+|--------|---------|
+| `create_ticket` | Open conversation for contact |
+| `get_ticket` | Fetch by `provider_ticket_id` |
+| `update_status` | Map `StandardStatus` transition |
+| `add_comment` | Public customer-visible reply |
+| `add_note` | Internal agent note |
+| `assign_agent` | Assign to platform agent id |
+| `add_tags` | Append labels |
+| `get_or_create_contact` | Resolve/create contact |
+| `verify_webhook` | HMAC / signature check |
+| `parse_webhook` | Payload → `StandardEvent` |
+| `health_check` | Platform API probe |
+
+`ChatwootAdapter` implements this in Task 1.3. Factory in Task 1.1.6.
+
+### Provider factory (Task 1.1.6)
+
+- Env: `TICKETING_PROVIDER` (default `chatwoot`)
+- Module: `app/providers/ticketing/factory.py`
+- Registry maps provider name → builder; lazy import keeps core decoupled
+- FastAPI: `ticketing_provider_dep()` in `app/api/deps.py`
+- Adding Zoho: implement `ZohoAdapter`, register in `_REGISTRY` — zero core changes
+
 ---
 
 ## Caching strategy

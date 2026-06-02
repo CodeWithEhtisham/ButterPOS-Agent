@@ -9,6 +9,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import Settings, get_settings
 from app.core.security import InvalidTokenError, decode_access_token
+from app.providers.ticketing.base import TicketingProvider
+from app.providers.ticketing.factory import get_ticketing_provider
 from app.schemas.auth import AuthenticatedSubject
 
 _bearer = HTTPBearer(auto_error=False)
@@ -41,3 +43,8 @@ def get_current_subject(
         ) from exc
 
     return AuthenticatedSubject(subject=payload.sub)
+
+
+def ticketing_provider_dep() -> TicketingProvider:
+    """Inject cached ticketing adapter (Chatwoot today; swappable via env)."""
+    return get_ticketing_provider()

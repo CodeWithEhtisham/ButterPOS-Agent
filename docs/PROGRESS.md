@@ -54,9 +54,9 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 1 | Project structure + config (`pydantic-settings`) | **Complete** (2026-06-02) |
 | 2 | JWT authentication | **Complete** (2026-06-02) |
 | 3 | API versioning (`/api/v1/`) | **Complete** (2026-06-02) — router wired with auth routes |
-| 4 | `TicketingProvider` interface (11 methods) | Not started |
-| 5 | Standard models (`StandardEvent`, etc.) | Not started |
-| 6 | Provider factory | Not started |
+| 4 | `TicketingProvider` interface (11 methods) | **Complete** (2026-06-02) |
+| 5 | Standard models (`StandardEvent`, etc.) | **Complete** (2026-06-02) |
+| 6 | Provider factory | **Complete** (2026-06-02) |
 | 7 | PII masking / de-masking | Not started |
 | 8 | Structured logging + global exception handler | Not started |
 

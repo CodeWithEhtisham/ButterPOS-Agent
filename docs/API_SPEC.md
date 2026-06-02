@@ -59,6 +59,12 @@ REST API contract for the ButterPOS AI Support Agent middleware. All endpoints l
 
 **Errors:** `401` missing, invalid, or expired token
 
+#### `GET /api/v1/system/ticketing-health`
+
+**Headers:** `Authorization: Bearer <access_token>`
+
+**Response `200`:** `ProviderHealth` — config probe via factory-wired adapter
+
 ---
 
 ## Request/response schemas
@@ -76,4 +82,10 @@ Pydantic models: `app/schemas/auth.py`
 
 ## Status mappings
 
-<!-- Task 1.1.5 / 1.3: StandardStatus (12-value enum) ↔ Chatwoot status mapping table. -->
+`StandardStatus` (12 values) is the middleware canonical lifecycle. Adapters translate to/from platform statuses.
+
+| StandardStatus | Chatwoot (Task 1.3) |
+|----------------|---------------------|
+| _Mapping table populated in ChatwootAdapter implementation_ | |
+
+Full enum documented in `DATA_MODELS.md`.
