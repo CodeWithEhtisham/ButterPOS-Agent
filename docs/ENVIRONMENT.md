@@ -115,6 +115,19 @@ Requires `REDIS_URL` for Celery broker and DLQ. Run worker + beat per `DEPLOYMEN
 | `TICKET_READ_CACHE_REDIS_PREFIX` | Optional | Ticket cache key prefix (default `cache:ticket:`) |
 | `CONTACT_READ_CACHE_REDIS_PREFIX` | Optional | Contact cache key prefix (default `cache:contact:`) |
 
+### Inbound message rate limits (Task 1.5.2)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `RATE_LIMIT_USER_MESSAGES_PER_HOUR` | Optional | Per-user incoming message cap (default `20`) |
+| `RATE_LIMIT_USER_WINDOW_SECONDS` | Optional | User sliding window (default `3600`) |
+| `RATE_LIMIT_USER_REDIS_PREFIX` | Optional | Redis key prefix (default `ratelimit:user:`) |
+| `RATE_LIMIT_RESTAURANT_MESSAGES_PER_DAY` | Optional | Per-restaurant incoming message cap (default `100`) |
+| `RATE_LIMIT_RESTAURANT_WINDOW_SECONDS` | Optional | Restaurant sliding window (default `86400`) |
+| `RATE_LIMIT_RESTAURANT_REDIS_PREFIX` | Optional | Redis key prefix (default `ratelimit:restaurant:`) |
+
+Requires `REDIS_URL` for production rate limiting. Outgoing messages and non-`message_created` events are not counted.
+
 ## Credential locations
 
 | Credential | Assumption | Where to obtain | Storage |

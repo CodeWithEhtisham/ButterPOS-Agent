@@ -131,6 +131,32 @@ class Settings(BaseSettings):
         description="Redis key prefix for contact read cache",
     )
 
+    # Rate limits (Task 1.5.2)
+    rate_limit_user_messages_per_hour: int = Field(
+        default=20,
+        description="Max incoming customer messages per user per hour",
+    )
+    rate_limit_user_window_seconds: int = Field(
+        default=3600,
+        description="Sliding window for user message rate limit",
+    )
+    rate_limit_user_redis_prefix: str = Field(
+        default="ratelimit:user:",
+        description="Redis key prefix for per-user message limits",
+    )
+    rate_limit_restaurant_messages_per_day: int = Field(
+        default=100,
+        description="Max incoming customer messages per restaurant per day",
+    )
+    rate_limit_restaurant_window_seconds: int = Field(
+        default=86400,
+        description="Sliding window for restaurant message rate limit",
+    )
+    rate_limit_restaurant_redis_prefix: str = Field(
+        default="ratelimit:restaurant:",
+        description="Redis key prefix for per-restaurant message limits",
+    )
+
     @field_validator("log_level", mode="before")
     @classmethod
     def normalize_log_level(cls, value: object) -> str:

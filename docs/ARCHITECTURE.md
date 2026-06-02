@@ -83,6 +83,17 @@ Implementation: `CachingTicketingProvider` wraps the configured adapter in `app/
 
 Postgres `ticket_cache` table (Task 1.2) is the **durable mirror** for polling; Redis is the **hot read cache** for platform API calls.
 
+## Rate limiting
+
+**Task 1.5.2** — Redis sliding-window counters on inbound customer messages at webhook ingress.
+
+| Limiter | Default | Module |
+|---------|---------|--------|
+| Per user (Chatwoot contact id) | 20 / hour | `app/core/rate_limit/inbound_message_limits.py` |
+| Per restaurant (custom attribute) | 100 / day | same |
+
+Checked in `WebhookService` after Postgres idempotency insert; duplicates do not consume quota. Over-limit webhooks ack `200 rate_limited` and skip Celery — protects LLM cost and platform API abuse without triggering Chatwoot retries.
+
 - **PII token map** — Task 1.1.7: Redis `pii:token:{id}` → original value, **24h TTL**. Used to unmask LLM responses. Invalid/expired tokens remain as placeholders in text.
 
 ---

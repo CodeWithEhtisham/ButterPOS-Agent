@@ -175,3 +175,21 @@ python -m spacy download en_core_web_lg
 ```
 
 If spaCy is missing, the service falls back to regex patterns automatically.
+
+---
+
+## Inbound message rate limits
+
+**Task 1.5.2** — abuse and cost protection at webhook ingress (before agent loop / LLM).
+
+| Scope | Limit | Identity |
+|-------|-------|----------|
+| User | 20 incoming messages / hour | Chatwoot contact id until Task 1.6 customer mapping |
+| Restaurant | 100 incoming messages / day | `restaurant_id` or `butterpos_restaurant_id` on conversation `custom_attributes` |
+
+- Only **incoming** `message_created` events count.
+- Restaurant scope is skipped when no restaurant id is present in the payload.
+- Rate-limited webhooks return HTTP `200` with `status: rate_limited` — not `429` — so Chatwoot does not retry.
+- JWT-protected API routes may use `429` via `RateLimitExceededError` in future steps.
+
+Implementation: `app/core/rate_limit/`, `WebhookService.receive_chatwoot()`.

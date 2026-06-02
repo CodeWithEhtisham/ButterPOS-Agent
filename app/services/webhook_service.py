@@ -10,8 +10,12 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
-from app.core.exceptions import WebhookVerificationError
+from app.core.exceptions import RateLimitExceededError, WebhookVerificationError
 from app.core.logging_config import get_logger
+from app.core.rate_limit.inbound_message_limits import (
+    InboundMessageRateLimiter,
+    get_inbound_message_rate_limiter,
+)
 from app.models.standard import StandardEvent
 from app.providers.ticketing.base import TicketingProvider
 from app.repositories.webhook_event_repository import (
@@ -24,7 +28,7 @@ from app.worker.dlq import InMemoryWebhookDlqStore, WebhookDlqStore, get_webhook
 
 logger = get_logger("app.webhooks")
 
-WebhookReceiveStatus = Literal["accepted", "duplicate"]
+WebhookReceiveStatus = Literal["accepted", "duplicate", "rate_limited"]
 
 
 @dataclass(frozen=True)
@@ -48,12 +52,14 @@ class WebhookService:
         settings: Settings | None = None,
         dispatcher: WebhookDispatcher | None = None,
         dlq_store: WebhookDlqStore | InMemoryWebhookDlqStore | None = None,
+        rate_limiter: InboundMessageRateLimiter | None = None,
     ) -> None:
         self._provider = provider
         self._session = session
         self._settings = settings or get_settings()
         self._dispatcher = dispatcher if dispatcher is not None else get_webhook_dispatcher()
         self._dlq_store = dlq_store
+        self._rate_limiter = rate_limiter if rate_limiter is not None else get_inbound_message_rate_limiter()
 
     def _get_dlq_store(self) -> WebhookDlqStore | InMemoryWebhookDlqStore:
         if self._dlq_store is None:
@@ -70,7 +76,22 @@ class WebhookService:
 
         status: WebhookReceiveStatus = "duplicate" if record.status == "duplicate" else "accepted"
         if record.status == "received":
-            await self._enqueue_processing(record.idempotency_key, event)
+            try:
+                await self._rate_limiter.check(event)
+            except RateLimitExceededError as exc:
+                await mark_webhook_failed(self._session, record.idempotency_key, exc.message)
+                status = "rate_limited"
+                logger.warning(
+                    "webhook_rate_limited idempotency_key=%s ticket_id=%s",
+                    record.idempotency_key,
+                    event.provider_ticket_id,
+                    extra={
+                        "idempotency_key": record.idempotency_key,
+                        "ticket_id": event.provider_ticket_id,
+                    },
+                )
+            else:
+                await self._enqueue_processing(record.idempotency_key, event)
 
         logger.info(
             "webhook_received provider=%s event_type=%s provider_event_id=%s ticket_id=%s status=%s",

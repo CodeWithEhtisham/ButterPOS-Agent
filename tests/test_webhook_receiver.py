@@ -15,6 +15,11 @@ from app.main import create_app
 from app.models.standard import StandardEvent, StandardEventType
 from app.providers.ticketing.chatwoot.webhooks import compute_chatwoot_signature
 from app.providers.ticketing.factory import get_ticketing_provider
+from app.core.rate_limit.inbound_message_limits import (
+    build_inbound_message_rate_limiter,
+    clear_inbound_message_rate_limiter_cache,
+)
+from app.core.rate_limit.sliding_window import InMemorySlidingWindowRateLimiter
 from app.services.webhook_dispatch import NoOpWebhookDispatcher, clear_webhook_dispatcher_cache
 from app.worker.dlq import InMemoryWebhookDlqStore, clear_webhook_dlq_store_cache
 from fastapi.testclient import TestClient
@@ -42,6 +47,12 @@ def webhook_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
 def webhook_client(webhook_settings: Settings, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     clear_webhook_dispatcher_cache()
     clear_webhook_dlq_store_cache()
+    clear_inbound_message_rate_limiter_cache()
+    high_limit = build_inbound_message_rate_limiter(
+        webhook_settings,
+        user_limiter=InMemorySlidingWindowRateLimiter(limit=10_000, window_seconds=3600),
+        restaurant_limiter=InMemorySlidingWindowRateLimiter(limit=10_000, window_seconds=86400),
+    )
     monkeypatch.setattr(
         "app.services.webhook_service.get_webhook_dispatcher",
         lambda: NoOpWebhookDispatcher(),
@@ -49,6 +60,10 @@ def webhook_client(webhook_settings: Settings, monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(
         "app.services.webhook_service.get_webhook_dlq_store",
         lambda: InMemoryWebhookDlqStore(),
+    )
+    monkeypatch.setattr(
+        "app.services.webhook_service.get_inbound_message_rate_limiter",
+        lambda: high_limit,
     )
     shared_store = IdempotencyMemorySession()
 

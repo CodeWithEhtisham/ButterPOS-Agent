@@ -321,6 +321,26 @@ Wrap the configured `TicketingProvider` in `CachingTicketingProvider` at factory
 
 ---
 
+## D-13 — Webhook rate limits ack with HTTP 200
+
+**Status:** Locked (2026-06-02)
+
+### Context
+
+Task 1.5.2 adds per-user and per-restaurant sliding-window limits on inbound Chatwoot `message_created` webhooks. Chatwoot retries non-2xx responses, which would amplify abuse and duplicate processing attempts.
+
+### Decision
+
+When a rate limit is exceeded at webhook ingress, return HTTP **`200`** with `status: rate_limited`, mark the idempotency audit row `failed`, and **do not** enqueue Celery. JWT API routes may still use `429` via `RateLimitExceededError`.
+
+### Consequences
+
+- Same ack pattern as duplicate webhooks — platform does not retry storms.
+- Rate-limited events are auditable in `webhook_event_log` but not processed.
+- Duplicates still skip rate-limit consumption (check runs only on fresh inserts).
+
+---
+
 ## D-10 — KB MVP list gates Phase 2
 
 **Status:** Resolved (2026-06-01) — tooling ready; production audit pending WhatsApp export

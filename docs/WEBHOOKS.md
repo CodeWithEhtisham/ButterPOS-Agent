@@ -9,10 +9,11 @@ Inbound webhook handling for the ticketing platform (Chatwoot).
 1. Chatwoot POSTs JSON to `POST /api/v1/webhooks/chatwoot` (**Task 1.4.1** — live).
 2. `WebhookService` reads **raw body bytes** and calls `ChatwootAdapter.verify_webhook()`.
 3. `ChatwootAdapter.parse_webhook()` maps payload → `StandardEvent`.
-4. Endpoint returns `200` with `status: accepted` or `status: duplicate` (**Task 1.4.2** — live).
+4. Endpoint returns `200` with `status: accepted`, `status: duplicate`, or `status: rate_limited` (**Task 1.4.2** + **1.5.2**).
 5. Idempotency row persisted in `webhook_event_log` (`received` on first delivery; replays skip insert).
-6. Process event via Celery `webhook.process` (**Task 1.4.3** — live stub processor).
-7. Failures → Redis DLQ + beat retry (**Task 1.4.3**).
+6. Incoming customer messages checked against Redis sliding-window rate limits (**Task 1.5.2**) before Celery enqueue.
+7. Process event via Celery `webhook.process` (**Task 1.4.3** — live stub processor).
+8. Failures → Redis DLQ + beat retry (**Task 1.4.3**).
 
 ---
 
@@ -141,6 +142,28 @@ Persisted in Postgres table `webhook_event_log` (Task 1.2.5). Redis dedup (Task 
 4. On processing failure (later) → set `status=failed`, `error_message`; push to Redis DLQ for retry.
 
 Duplicate events: ack `200`, skip processing.
+
+---
+
+## Rate limiting
+
+**Task 1.5.2** — sliding-window quotas on **incoming customer** `message_created` events only (after idempotency insert, before Celery dispatch).
+
+| Scope | Default limit | Window | Redis key prefix | Key source |
+|-------|---------------|--------|------------------|------------|
+| User | 20 messages | 1 hour | `ratelimit:user:` | Chatwoot contact id (`sender_provider_contact_id`) until Task 1.6 maps ButterPOS user ids |
+| Restaurant | 100 messages | 24 hours | `ratelimit:restaurant:` | `conversation.custom_attributes.restaurant_id` or `butterpos_restaurant_id`; skipped if absent |
+
+**Flow:**
+
+1. New webhook passes idempotency → rate limiter checks user and (when present) restaurant keys.
+2. Within quota → Celery `webhook.process` enqueued; HTTP `200` with `status: accepted`.
+3. Over quota → audit row marked `failed` with error message; HTTP **`200`** with `status: rate_limited` (no Celery enqueue — avoids Chatwoot retry amplification).
+4. Duplicate replays → no rate-limit consumption (check runs only when insert status is `received`).
+
+Implementation: `app/core/rate_limit/sliding_window.py`, `app/core/rate_limit/inbound_message_limits.py`, wired in `WebhookService.receive_chatwoot()`.
+
+Env vars: see `ENVIRONMENT.md` § Inbound message rate limits.
 
 ---
 

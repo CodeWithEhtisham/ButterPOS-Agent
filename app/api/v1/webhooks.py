@@ -23,6 +23,7 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
     responses={
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse},
         status.HTTP_400_BAD_REQUEST: {"model": ErrorResponse},
+        status.HTTP_429_TOO_MANY_REQUESTS: {"model": ErrorResponse},
     },
     summary="Receive Chatwoot account webhook",
 )

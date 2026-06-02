@@ -27,3 +27,10 @@ class WebhookProcessingError(AppError):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, status_code=500)
+
+
+class RateLimitExceededError(AppError):
+    """Inbound request exceeded configured rate limit."""
+
+    def __init__(self, message: str = "Rate limit exceeded") -> None:
+        super().__init__(message, status_code=429)

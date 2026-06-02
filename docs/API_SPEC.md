@@ -110,9 +110,23 @@ Duplicate replay (same `idempotency_key` already in `webhook_event_log`):
 
 Both return HTTP `200` — Chatwoot must not retry on duplicates.
 
+Rate-limited incoming message (quota exceeded):
+
+```json
+{
+  "status": "rate_limited",
+  "event_type": "message_created",
+  "provider_event_id": "12346",
+  "provider_ticket_id": "5678",
+  "idempotency_key": "message_created:12346"
+}
+```
+
+Also HTTP `200` — rate limits are not surfaced as `429` on the webhook path so Chatwoot does not retry storms.
+
 **Errors:** `401` invalid/missing signature · `400` malformed payload or missing idempotency key
 
-**Implementation:** `app/api/v1/webhooks.py` → `WebhookService.receive_chatwoot()` → `record_webhook_event()` in `app/repositories/webhook_event_repository.py`.
+**Implementation:** `app/api/v1/webhooks.py` → `WebhookService.receive_chatwoot()` → `record_webhook_event()` → `InboundMessageRateLimiter.check()` in `app/repositories/webhook_event_repository.py` / `app/core/rate_limit/`.
 
 Event processing and DLQ: Task 1.4 sub-steps 3+.
 

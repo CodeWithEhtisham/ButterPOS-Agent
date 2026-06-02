@@ -38,14 +38,34 @@ class IdempotencyMemorySession:
     async def commit(self) -> None:
         return None
 
-    async def scalar(self, _statement: Any) -> WebhookEventLog | None:
+    async def scalar(self, statement: Any) -> WebhookEventLog | None:
         if self._last_conflict_key is not None:
             key = self._last_conflict_key
             self._last_conflict_key = None
             return self._rows.get(key)
+
+        key = _idempotency_key_from_statement(statement)
+        if key is not None:
+            return self._rows.get(key)
+
         if len(self._rows) == 1:
             return next(iter(self._rows.values()))
         return None
+
+
+def _idempotency_key_from_statement(statement: Any) -> str | None:
+    """Best-effort extract idempotency_key from SQLAlchemy select used in tests."""
+    try:
+        where = statement._where_criteria
+    except AttributeError:
+        return None
+    for criterion in where:
+        left = getattr(criterion, "left", None)
+        right = getattr(criterion, "right", None)
+        if getattr(left, "key", None) == "idempotency_key" and right is not None:
+            value = getattr(right, "value", right)
+            return str(value)
+    return None
 
 
 async def memory_webhook_session() -> AsyncGenerator[IdempotencyMemorySession, None]:

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from app.models.standard import StandardEventType
 
-WebhookResponseStatus = Literal["accepted", "duplicate"]
+WebhookResponseStatus = Literal["accepted", "duplicate", "rate_limited"]
 
 
 class WebhookAcceptedResponse(BaseModel):

@@ -52,7 +52,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | # | Sub-step | Status |
 |---|----------|--------|
 | 1 | Ticket cache (60s) + contact cache (24h) + webhook invalidation | **Complete** (2026-06-02) |
-| 2 | Per-user + per-restaurant rate limits | Not started |
+| 2 | Per-user + per-restaurant rate limits | **Complete** (2026-06-02) |
 | 3 | Request dedup + PII token mapping | Not started |
 
 ### Task 1.4 sub-steps
