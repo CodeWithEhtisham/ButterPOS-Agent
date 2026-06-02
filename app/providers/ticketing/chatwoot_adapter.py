@@ -22,7 +22,15 @@ from app.models.standard import (
 from app.providers.ticketing.base import TicketingProvider
 from app.providers.ticketing.chatwoot.auth import missing_config_fields
 from app.providers.ticketing.chatwoot.client import ChatwootClient
+from app.providers.ticketing.chatwoot.conversations import (
+    add_conversation_labels,
+    build_source_id,
+    create_conversation,
+    parse_contact_id,
+    send_conversation_message,
+)
 from app.providers.ticketing.chatwoot.errors import ChatwootAPIError, ChatwootAuthError, ChatwootConfigError
+from app.providers.ticketing.chatwoot.mappers import conversation_to_standard_ticket
 
 _TASK_1_3_REMAINING = "Not implemented — completed in later Task 1.3 sub-steps"
 
@@ -42,7 +50,48 @@ class ChatwootAdapter(TicketingProvider):
         self._client = client or ChatwootClient(settings)
 
     async def create_ticket(self, request: CreateTicketRequest) -> StandardTicket:
-        raise NotImplementedError(_TASK_1_3_REMAINING)
+        """Open a Chatwoot conversation for an existing contact."""
+        if not self._settings.chatwoot_inbox_id:
+            raise ChatwootConfigError("CHATWOOT_INBOX_ID is not configured")
+
+        contact_id = parse_contact_id(request.provider_contact_id)
+        source_id = build_source_id(contact_id, request.metadata)
+        custom_attributes = request.metadata.get("custom_attributes")
+        if not isinstance(custom_attributes, dict):
+            custom_attributes = None
+        if request.subject and custom_attributes is None:
+            custom_attributes = {"subject": request.subject}
+        elif request.subject and custom_attributes is not None:
+            custom_attributes = {**custom_attributes, "subject": request.subject}
+
+        raw = await create_conversation(
+            self._client,
+            contact_id=contact_id,
+            source_id=source_id,
+            custom_attributes=custom_attributes,
+        )
+        ticket = conversation_to_standard_ticket(
+            raw,
+            subject=request.subject,
+            extra_metadata=dict(request.metadata),
+        )
+        ticket.metadata["source_id"] = source_id
+
+        conversation_id = int(ticket.provider_ticket_id)
+
+        if request.initial_message:
+            await send_conversation_message(
+                self._client,
+                conversation_id,
+                content=request.initial_message,
+                private=False,
+            )
+
+        if request.tags:
+            await add_conversation_labels(self._client, conversation_id, request.tags)
+            ticket.tags = list(request.tags)
+
+        return ticket
 
     async def get_ticket(self, provider_ticket_id: str) -> StandardTicket:
         raise NotImplementedError(_TASK_1_3_REMAINING)

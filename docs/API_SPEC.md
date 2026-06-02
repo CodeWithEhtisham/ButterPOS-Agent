@@ -86,6 +86,26 @@ Pydantic models: `app/schemas/auth.py`
 
 | StandardStatus | Chatwoot (Task 1.3) |
 |----------------|---------------------|
-| _Mapping table populated in ChatwootAdapter implementation_ | |
+| `open` | `open` |
+| `pending` | `pending` |
+| `resolved` | `resolved` |
+| `snoozed` | `snoozed` |
+| _Others_ | Mapped in Task 1.3.3 (`get_ticket` / `update_status`) |
 
-Full enum documented in `DATA_MODELS.md`.
+### `create_ticket()` (Task 1.3.2)
+
+**Adapter:** `ChatwootAdapter.create_ticket(CreateTicketRequest) → StandardTicket`
+
+| Standard field | Chatwoot source |
+|----------------|-----------------|
+| `provider_contact_id` | Request input → `contact_id` on `POST /conversations` |
+| `provider_ticket_id` | Response `id` |
+| `status` | Response `status` → `StandardStatus` via mapper |
+| `subject` | Request `subject` → `custom_attributes.subject` + `StandardTicket.subject` |
+| `initial_message` | `POST /conversations/{id}/messages` (outgoing, public) |
+| `tags` | `POST /conversations/{id}/labels` |
+| `metadata.source_id` | Request `metadata.source_id` or generated `butterpos-{contact_id}-{uuid}` |
+
+Requires `CHATWOOT_INBOX_ID` (API-channel inbox). Implementation: `app/providers/ticketing/chatwoot/conversations.py`, `mappers.py`.
+
+---

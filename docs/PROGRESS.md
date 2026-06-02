@@ -59,7 +59,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | # | Sub-step | Status |
 |---|----------|--------|
 | 1 | Auth — API token + async HTTP client + live health probe | **Complete** (2026-06-02) |
-| 2 | `create_ticket()` | Not started |
+| 2 | `create_ticket()` | **Complete** (2026-06-02) |
 | 3 | `get_ticket()` + `update_status()` + status mapping | Not started |
 | 4 | `add_comment()` + `add_note()` | Not started |
 | 5 | `assign_agent()` + `add_tags()` | Not started |
