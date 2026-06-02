@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from app.models.standard import StandardStatus, StandardTicket
+from app.models.standard import StandardContact, StandardStatus, StandardTicket
 
 STANDARD_STATUS_ATTRIBUTE = "standard_status"
 
@@ -151,5 +151,46 @@ def conversation_to_standard_ticket(
         updated_at=parse_chatwoot_timestamp(
             conversation.get("last_activity_at") or conversation.get("updated_at")
         ),
+        metadata=metadata,
+    )
+
+
+def unwrap_contact(data: dict[str, Any]) -> dict[str, Any]:
+    if "contact" in data and isinstance(data["contact"], dict):
+        return data["contact"]
+    if "payload" in data:
+        payload = data["payload"]
+        if isinstance(payload, dict) and "contact" in payload and isinstance(payload["contact"], dict):
+            return payload["contact"]
+        if isinstance(payload, list) and payload and isinstance(payload[0], dict):
+            return payload[0]
+    return data
+
+
+def contact_to_standard_contact(
+    data: dict[str, Any],
+    *,
+    extra_metadata: dict[str, Any] | None = None,
+) -> StandardContact:
+    """Convert Chatwoot contact JSON to StandardContact."""
+    contact = unwrap_contact(data)
+    contact_id = contact.get("id")
+    if contact_id is None:
+        raise ValueError("Chatwoot contact response missing id")
+
+    metadata = dict(extra_metadata or {})
+    custom_attributes = contact.get("custom_attributes")
+    if isinstance(custom_attributes, dict):
+        metadata.update(custom_attributes)
+    if contact.get("identifier"):
+        metadata["identifier"] = contact["identifier"]
+
+    phone = contact.get("phone_number") or contact.get("phone")
+
+    return StandardContact(
+        provider_contact_id=str(contact_id),
+        name=contact.get("name"),
+        email=contact.get("email"),
+        phone=str(phone) if phone else None,
         metadata=metadata,
     )

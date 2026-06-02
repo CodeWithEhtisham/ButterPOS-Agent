@@ -22,6 +22,7 @@ from app.models.standard import (
 from app.providers.ticketing.base import TicketingProvider
 from app.providers.ticketing.chatwoot.auth import missing_config_fields
 from app.providers.ticketing.chatwoot.client import ChatwootClient
+from app.providers.ticketing.chatwoot.contacts import get_or_create_contact as chatwoot_get_or_create_contact
 from app.providers.ticketing.chatwoot.conversations import (
     add_conversation_labels,
     append_conversation_labels,
@@ -188,7 +189,10 @@ class ChatwootAdapter(TicketingProvider):
         return ticket
 
     async def get_or_create_contact(self, request: CreateContactRequest) -> StandardContact:
-        raise NotImplementedError(_TASK_1_3_REMAINING)
+        """Map ButterPOS user to Chatwoot contact — filter/search then create."""
+        if not self._settings.chatwoot_inbox_id:
+            raise ChatwootConfigError("CHATWOOT_INBOX_ID is not configured")
+        return await chatwoot_get_or_create_contact(self._client, request)
 
     async def verify_webhook(self, raw_body: bytes, headers: dict[str, str]) -> bool:
         raise NotImplementedError(_TASK_1_3_REMAINING)

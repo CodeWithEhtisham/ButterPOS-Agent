@@ -153,4 +153,25 @@ Notes always use plain `text`; no rich attributes.
 
 `assignee_id` and `provider_ticket_id` must be numeric Chatwoot ids (strings in standard model).
 
+### `get_or_create_contact()` (Task 1.3.6)
+
+**Adapter:** `ChatwootAdapter.get_or_create_contact(CreateContactRequest) → StandardContact`
+
+| Standard field | Chatwoot source |
+|----------------|-----------------|
+| `external_user_id` | `identifier` on contact (ButterPOS `butterpos_user_id`) |
+| `name` / `email` / `phone` | Same fields on create; used for filter/search |
+| `provider_contact_id` | Chatwoot contact `id` |
+
+**Lookup order:**
+
+1. `POST /contacts/filter` — exact match on `identifier` (preferred)
+2. `POST /contacts/filter` — exact match on `email` if provided
+3. `GET /contacts/search?q=...` — fallback with exact match validation
+4. `POST /contacts` with `inbox_id` — create if not found
+
+Requires at least one of: `external_user_id`, `email`, or `phone`. Requires `CHATWOOT_INBOX_ID` for create.
+
+Implementation: `app/providers/ticketing/chatwoot/contacts.py`.
+
 ---
