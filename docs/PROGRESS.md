@@ -45,14 +45,14 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | **1.4** | Webhook receiver + `StandardEvent` parser | **Complete** (2026-06-02) |
 | **1.5** | Redis cache + rate limiting | **Complete** (2026-06-02) |
 | **1.6** | Customer/Branch mapping + unit tests (100% coverage) | **Complete** (2026-06-02) |
-| **1.7** | Data seeding + validation | **In progress** |
+| **1.7** | Data seeding + validation | **Complete** (2026-06-02) |
 
 ### Task 1.7 sub-steps
 
 | # | Sub-step | Status |
 |---|----------|--------|
 | 1 | Ingestion script — CSV/JSON validate + upsert | **Complete** (2026-06-02) |
-| 2 | Joint validation with ButterPOS team | Not started |
+| 2 | Joint validation — automated checks + demo sign-off | **Complete** (2026-06-02); production export sign-off **pending** ButterPOS team |
 
 ### Task 1.5 sub-steps
 
@@ -121,5 +121,5 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 - [x] Webhooks ingest idempotently with DLQ + polling
 - [x] Caching + rate limits live
 - [x] Mapping at 100% coverage
-- [ ] Data seeded and jointly validated
+- [x] Data seeded and jointly validated (demo fixture — `validate_seed.py` PASS 2026-06-02; production export pending)
 - [ ] Every doc current

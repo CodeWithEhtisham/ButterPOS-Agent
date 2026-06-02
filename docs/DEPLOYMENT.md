@@ -163,6 +163,40 @@ python scripts/seed_data.py --input "$BUTTERPOS_DATA_EXPORT"
 
 Export schema: `DATA_MODELS.md` § Tenant export schema. Upserts by `butterpos_*` external ids — safe to re-run.
 
+### Post-seed validation (Task 1.7.2)
+
+After seeding, run automated mapping and row-count checks:
+
+```bash
+python scripts/validate_seed.py
+python scripts/validate_seed.py --json   # machine-readable report
+```
+
+**Expected demo fixture result:** `RESULT: PASS` with checks for restaurants/branches/users/sla_configs and mapping scenarios (`active`, `payment_due`, `no_branch`, contact lookup, unknown user).
+
+| Check | Demo expectation |
+|-------|------------------|
+| `demo-user-active` | `active`, tier 3 |
+| `demo-user-unpaid` | `payment_due`, tier 1 |
+| `demo-user-no-branch` | `no_branch`, tier 1 |
+| Contact `9001` / `9002` | `active` / `payment_due` |
+| Unknown user | `unknown_user` |
+
+### Sign-off checklist
+
+| Step | Owner | Demo (2026-06-02) | Production |
+|------|-------|-------------------|------------|
+| Export schema agreed (`export_schema_version: 1`) | ButterPOS + middleware | ✓ fixture | Pending real export |
+| `seed_data.py --dry-run` passes | Middleware | ✓ | Pending |
+| `seed_data.py` upsert completes | Middleware | ✓ | Pending |
+| `validate_seed.py` → PASS | Middleware | ✓ | Pending |
+| Spot-check 3+ real users in Chatwoot/mapping | Both teams | N/A (fixture ids) | Pending |
+| Production export path in `BUTTERPOS_DATA_EXPORT` | ButterPOS team | N/A | Pending |
+
+**Signed off (demo):** automated validation PASS against `scripts/fixtures/sample_tenant_export.json` on local Postgres (2026-06-02).
+
+**Production gate:** repeat seed + `validate_seed.py` when ButterPOS delivers production export; extend `DEMO_USER_EXPECTATIONS` in `tenant_validation_service.py` or add a production expectations file.
+
 ---
 
 ## Troubleshooting
