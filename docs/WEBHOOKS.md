@@ -102,11 +102,22 @@ Alternative: redirect tablet to Chatwoot-hosted survey at `/survey/responses/{co
 
 ## Idempotency
 
-<!-- TBD Phase 1: webhook_event table + Redis dedup. -->
+Persisted in Postgres table `webhook_event_log` (Task 1.2.5). Redis dedup (Task 1.5) is an optional hot-path layer on top.
 
-- Unique key: `{event}:{message_id}` or `{event}:{conversation_id}:{updated_at}`
-- Payload hash: SHA-256 of raw body stored for audit
-- Duplicate events: ack `200`, skip processing
+| Field | Purpose |
+|-------|---------|
+| `idempotency_key` | Unique — `{event}:{message_id}` or `{event}:{conversation_id}:{updated_at}` |
+| `payload_hash` | SHA-256 hex (64 chars) of raw request body for audit |
+| `status` | `received`, `processed`, `duplicate`, `failed` |
+
+**Flow (Task 1.4):**
+
+1. Compute `idempotency_key` and `payload_hash` from raw body.
+2. Insert row; on unique violation → return `200`, skip processing (`duplicate`).
+3. On success → process event, set `status=processed`, `processed_at=now()`.
+4. On failure → set `status=failed`, `error_message`; push to Redis DLQ for retry.
+
+Duplicate events: ack `200`, skip processing.
 
 ---
 

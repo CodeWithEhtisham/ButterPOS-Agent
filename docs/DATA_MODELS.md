@@ -262,6 +262,49 @@ Bilingual RAG (Phase 2) reads `content_en` / `content_ur` based on user `languag
 
 ---
 
+## Tables (Task 1.2.5)
+
+ORM models: `app/db/models/webhook_event_log.py`, `app/db/models/sla_config.py`. Migrations: Task 1.2.6.
+
+### `webhook_event_log`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint PK | Internal id (TimestampMixin) |
+| `idempotency_key` | varchar(256) unique | Dedup key from adapter (see `WEBHOOKS.md`) |
+| `payload_hash` | varchar(64) | SHA-256 hex of raw webhook body |
+| `event_type` | varchar(64) | `StandardEventType` value |
+| `provider_event_id` | varchar(128) | Platform-native event/message id |
+| `provider_ticket_id` | varchar(128) nullable | Platform conversation id |
+| `status` | varchar(32) | `received`, `processed`, `duplicate`, `failed` |
+| `error_message` | text nullable | Last processing error (DLQ handoff) |
+| `occurred_at` | timestamptz nullable | Event time from platform payload |
+| `processed_at` | timestamptz nullable | When middleware finished handling |
+| `created_at` / `updated_at` | timestamptz | TimestampMixin |
+
+**Why Postgres (not Redis only)?** Idempotency must survive restarts; audit trail for support debugging. Redis DLQ (Task 1.4) handles retry buffering only.
+
+### `sla_config`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint PK | Internal id |
+| `plan_type` | varchar(32) unique | Matches `restaurants.plan_type` — e.g. `8h`, `16h`, `24-7` |
+| `coverage_hours` | integer | Daily support window length (8, 16, or 24) |
+| `first_response_minutes` | integer | Target time to first agent/AI reply |
+| `resolution_minutes` | integer | Target time to resolve or escalate |
+| `escalation_after_minutes` | integer | Auto-escalate if ticket open longer than this |
+| `description` | varchar(512) nullable | Human-readable plan summary |
+| `rules` | jsonb | Extra escalation rules (extensible without migration) |
+| `is_active` | boolean | Soft-disable a plan tier |
+| `created_at` / `updated_at` | timestamptz | TimestampMixin |
+
+**Application:** Branch `timezone` (Task 1.2.2) defines *when* the coverage window applies; `sla_config` defines *how long* targets are per plan. Task 1.6 mapping loads restaurant → `plan_type` → SLA row.
+
+Seed data for `sla_config` rows is deferred to Task 1.7 (requires business sign-off on targets).
+
+---
+
 ## Relationships
 
 See entity diagram above. Cascade: deleting a restaurant removes branches; branch delete sets user `branch_id` NULL.

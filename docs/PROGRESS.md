@@ -50,7 +50,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 2 | Restaurant + Branch + User | **Complete** (2026-06-02) |
 | 3 | Ticket cache + AI conversation | **Complete** (2026-06-02) |
 | 4 | KB article + version history | **Complete** (2026-06-02) |
-| 5 | Webhook event log + SLA config | Not started |
+| 5 | Webhook event log + SLA config | **Complete** (2026-06-02) |
 | 6 | Alembic init + first migration | Not started |
 | 1.3 | `ChatwootAdapter` | Not started |
 | 1.4 | Webhook receiver + `StandardEvent` parser | Not started |
