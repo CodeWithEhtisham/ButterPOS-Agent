@@ -44,7 +44,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | **1.3** | `ChatwootAdapter` | **Complete** (2026-06-02) |
 | **1.4** | Webhook receiver + `StandardEvent` parser | **Complete** (2026-06-02) |
 | **1.5** | Redis cache + rate limiting | **Complete** (2026-06-02) |
-| **1.6** | Customer/Branch mapping + unit tests (100% coverage) | **In progress** |
+| **1.6** | Customer/Branch mapping + unit tests (100% coverage) | **Complete** (2026-06-02) |
 | **1.7** | Data seeding + validation | Not started |
 
 ### Task 1.5 sub-steps
@@ -60,7 +60,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | # | Sub-step | Status |
 |---|----------|--------|
 | 1 | Mapping chain + payment check + timezone | **Complete** (2026-06-02) |
-| 2 | Unit tests — all scenarios + 100% coverage | Not started |
+| 2 | Unit tests — all scenarios + 100% coverage | **Complete** (2026-06-02) |
 
 ### Task 1.4 sub-steps
 
@@ -113,6 +113,6 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 - [ ] `ChatwootAdapter` passes against local Chatwoot
 - [x] Webhooks ingest idempotently with DLQ + polling
 - [x] Caching + rate limits live
-- [ ] Mapping at 100% coverage
+- [x] Mapping at 100% coverage
 - [ ] Data seeded and jointly validated
 - [ ] Every doc current

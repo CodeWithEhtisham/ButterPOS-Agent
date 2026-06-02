@@ -82,7 +82,16 @@ Use `get_settings.cache_clear()` in tests when overriding env vars for the cache
 
 ## Coverage rules
 
-Customer/branch mapping (`Task 1.6`) requires **100% coverage** on mapping logic. Show `pytest --cov` output at the gate.
+Customer/branch mapping (`Task 1.6`) requires **100% coverage** on mapping logic. Gate command:
+
+```bash
+pytest tests/test_customer_mapping.py -q \
+  --cov=app.services.mapping \
+  --cov=app.services.customer_mapping_service \
+  --cov=app.repositories.customer_mapping_repository \
+  --cov-report=term-missing \
+  --cov-fail-under=100
+```
 
 ---
 
