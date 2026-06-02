@@ -393,6 +393,26 @@ Evaluation order: unknown user → no branch → expired → payment due → SLA
 
 ---
 
+## D-16 — Tenant export schema v1
+
+**Status:** Locked (2026-06-02)
+
+### Context
+
+Task 1.7 requires loading ButterPOS restaurant/branch/user data without guessing production field names.
+
+### Decision
+
+Adopt **export schema version `1`**: JSON envelope (primary) or CSV directory with the same columns. External ids (`butterpos_restaurant_id`, etc.) are upsert keys. Demo fixture ships for local dev; production export must be signed off by ButterPOS team (Task 1.7.2).
+
+### Consequences
+
+- Validation is strict — invalid FKs or plan types fail before any DB write.
+- `--dry-run` supports Team Lead review without mutating Postgres.
+- ButterPOS team delivers export matching `DATA_MODELS.md`; middleware does not invent production tenant rows.
+
+---
+
 ## D-10 — KB MVP list gates Phase 2
 
 **Status:** Resolved (2026-06-01) — tooling ready; production audit pending WhatsApp export

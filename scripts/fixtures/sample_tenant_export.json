@@ -1,0 +1,87 @@
+{
+  "schema_version": "1",
+  "restaurants": [
+    {
+      "butterpos_restaurant_id": "demo-rest-active",
+      "name": "Demo Dhaba (Active)",
+      "plan_type": "8h",
+      "payment_due": false,
+      "expiry": "2027-12-31T00:00:00Z"
+    },
+    {
+      "butterpos_restaurant_id": "demo-rest-unpaid",
+      "name": "Demo Cafe (Unpaid)",
+      "plan_type": "16h",
+      "payment_due": true,
+      "expiry": "2027-12-31T00:00:00Z"
+    },
+    {
+      "butterpos_restaurant_id": "demo-rest-expired",
+      "name": "Demo Biryani (Expired)",
+      "plan_type": "24-7",
+      "payment_due": false,
+      "expiry": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "branches": [
+    {
+      "butterpos_branch_id": "demo-branch-karachi",
+      "butterpos_restaurant_id": "demo-rest-active",
+      "name": "Karachi Main",
+      "timezone": "Asia/Karachi",
+      "devices": [{"device_id": "tablet-001", "label": "Counter POS"}]
+    },
+    {
+      "butterpos_branch_id": "demo-branch-lahore",
+      "butterpos_restaurant_id": "demo-rest-unpaid",
+      "name": "Lahore Mall",
+      "timezone": "Asia/Karachi"
+    }
+  ],
+  "users": [
+    {
+      "butterpos_user_id": "demo-user-active",
+      "butterpos_branch_id": "demo-branch-karachi",
+      "provider_contact_id": "9001",
+      "language_pref": "roman_ur"
+    },
+    {
+      "butterpos_user_id": "demo-user-unpaid",
+      "butterpos_branch_id": "demo-branch-lahore",
+      "provider_contact_id": "9002",
+      "language_pref": "en"
+    },
+    {
+      "butterpos_user_id": "demo-user-no-branch",
+      "language_pref": "en"
+    }
+  ],
+  "sla_configs": [
+    {
+      "plan_type": "8h",
+      "coverage_hours": 8,
+      "first_response_minutes": 30,
+      "resolution_minutes": 240,
+      "escalation_after_minutes": 120,
+      "description": "8-hour support window",
+      "rules": {"coverage_start_hour": 9}
+    },
+    {
+      "plan_type": "16h",
+      "coverage_hours": 16,
+      "first_response_minutes": 20,
+      "resolution_minutes": 180,
+      "escalation_after_minutes": 90,
+      "description": "16-hour support window",
+      "rules": {"coverage_start_hour": 8}
+    },
+    {
+      "plan_type": "24-7",
+      "coverage_hours": 24,
+      "first_response_minutes": 15,
+      "resolution_minutes": 120,
+      "escalation_after_minutes": 60,
+      "description": "24/7 support"
+    }
+  ]
+}

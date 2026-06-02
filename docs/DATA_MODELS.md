@@ -371,3 +371,38 @@ users.butterpos_user_id → users.branch_id → branches → restaurants → sla
 Edge-case behavior: **D-15** in `DECISIONS.md`.
 
 ---
+
+## Tenant export schema (Task 1.7)
+
+Version **`1`** — JSON envelope or CSV directory. Production files come from the ButterPOS team; demo fixture: `scripts/fixtures/sample_tenant_export.json`.
+
+### JSON envelope
+
+```json
+{
+  "schema_version": "1",
+  "restaurants": [ { "butterpos_restaurant_id", "name", "plan_type", "payment_due", "expiry?" } ],
+  "branches": [ { "butterpos_branch_id", "butterpos_restaurant_id", "name", "timezone", "devices?" } ],
+  "users": [ { "butterpos_user_id", "butterpos_branch_id?", "provider_contact_id?", "language_pref" } ],
+  "sla_configs": [ { "plan_type", "coverage_hours", "first_response_minutes", "resolution_minutes", "escalation_after_minutes", "rules?", "is_active?" } ]
+}
+```
+
+### CSV directory
+
+Directory containing `restaurants.csv` (required), optional `branches.csv`, `users.csv`, `sla_configs.csv` with the same column names.
+
+### Validation rules
+
+| Rule | Error if violated |
+|------|-------------------|
+| Unique `butterpos_restaurant_id`, `butterpos_branch_id`, `butterpos_user_id` | Duplicate id |
+| `plan_type` ∈ `8h`, `16h`, `24-7` | Invalid plan |
+| Branch → restaurant FK by external id | Unknown restaurant |
+| User → branch FK (when set) | Unknown branch |
+| `timezone` valid IANA name | Invalid timezone |
+| SLA rows cover all restaurant plan types (when `sla_configs` non-empty) | Missing SLA plan |
+
+Loader: `app/services/tenant_export_loader.py`. Persistence: `app/services/tenant_seed_service.py`. CLI: `scripts/seed_data.py`.
+
+---

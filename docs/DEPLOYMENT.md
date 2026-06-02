@@ -129,14 +129,39 @@ Broker and DLQ both use `REDIS_URL`.
 
 ## Data seeding
 
-<!-- Phase 1 Task 1.7 -->
+**Task 1.7** — load restaurant / branch / user data from ButterPOS export into middleware Postgres.
 
-Requires `BUTTERPOS_DATA_EXPORT` or `DATABASE_URL` with restaurant/branch/user data (Step 0.4 A2). Seeding script TBD in Phase 1.
+### Prerequisites
+
+- Migrations applied: `alembic upgrade head`
+- `DATABASE_URL` set in `.env`
+- Export file from ButterPOS team **or** local demo fixture
+
+### Demo fixture (local dev only)
 
 ```bash
-# Future (Phase 1)
-# python scripts/seed_data.py --input /path/to/export.json
+python scripts/seed_data.py \
+  --input scripts/fixtures/sample_tenant_export.json \
+  --dry-run
+
+python scripts/seed_data.py \
+  --input scripts/fixtures/sample_tenant_export.json
 ```
+
+### Production export
+
+Set `BUTTERPOS_DATA_EXPORT` in `.env` to the signed-off JSON or CSV directory path, then:
+
+```bash
+python scripts/seed_data.py --input "$BUTTERPOS_DATA_EXPORT"
+```
+
+| Flag | Purpose |
+|------|---------|
+| `--dry-run` | Validate export only — no DB writes |
+| `--seed-default-sla` | Insert default `sla_config` rows for `8h` / `16h` / `24-7` when omitted |
+
+Export schema: `DATA_MODELS.md` § Tenant export schema. Upserts by `butterpos_*` external ids — safe to re-run.
 
 ---
 
