@@ -44,7 +44,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | **1.3** | `ChatwootAdapter` | **Complete** (2026-06-02) |
 | **1.4** | Webhook receiver + `StandardEvent` parser | **Complete** (2026-06-02) |
 | **1.5** | Redis cache + rate limiting | **Complete** (2026-06-02) |
-| **1.6** | Customer/Branch mapping + unit tests (100% coverage) | Not started |
+| **1.6** | Customer/Branch mapping + unit tests (100% coverage) | **In progress** |
 | **1.7** | Data seeding + validation | Not started |
 
 ### Task 1.5 sub-steps
@@ -54,6 +54,13 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 1 | Ticket cache (60s) + contact cache (24h) + webhook invalidation | **Complete** (2026-06-02) |
 | 2 | Per-user + per-restaurant rate limits | **Complete** (2026-06-02) |
 | 3 | Request dedup + PII token mapping | **Complete** (2026-06-02) |
+
+### Task 1.6 sub-steps
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Mapping chain + payment check + timezone | **Complete** (2026-06-02) |
+| 2 | Unit tests — all scenarios + 100% coverage | Not started |
 
 ### Task 1.4 sub-steps
 

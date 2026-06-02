@@ -361,6 +361,38 @@ Only deduplicate `create_ticket()` when the client sends `metadata.client_reques
 
 ---
 
+## D-15 — Customer mapping edge-case behavior
+
+**Status:** Locked (2026-06-02)
+
+### Context
+
+Task 1.6 resolves `butterpos_user_id` → branch → restaurant → SLA. The agent loop (Phase 2) needs deterministic authorization before tool calls.
+
+### Decision
+
+| Status | Condition | `max_agent_tier` | Agent behavior (Phase 2) |
+|--------|-----------|------------------|---------------------------|
+| `active` | Valid chain, plan current, paid, within coverage | 3 | Full tiered playbook (T1–T3 per confidence) |
+| `unknown_user` | No `users` row | 1 | Escalate — no tenant context |
+| `no_branch` | `users.branch_id` NULL | 1 | Escalate — cannot resolve timezone/restaurant |
+| `plan_expired` | `restaurants.expiry` in the past | 1 | Read-only; direct user to renew |
+| `payment_due` | `restaurants.payment_due=true` | 1 | Read-only; direct user to billing |
+| `outside_coverage` | Local branch time outside SLA window | 1 | Auto-reply outside hours; no fixes |
+| `sla_not_configured` | No active `sla_config` for `plan_type` | 1 | Escalate — missing SLA row |
+
+Coverage window: branch `timezone` + `sla_config.coverage_hours` + optional `rules.coverage_start_hour` (default 9). Plans with `coverage_hours >= 24` (`24-7`) are always in coverage.
+
+Evaluation order: unknown user → no branch → expired → payment due → SLA missing → outside coverage → active.
+
+### Consequences
+
+- Pure evaluator in `app/services/mapping/` is unit-testable without Postgres (Task 1.6.2).
+- Webhook path uses `resolve_by_contact_id()` until widget sends explicit `butterpos_user_id`.
+- Phase 2 agent loop reads `max_agent_tier` before MCP tool routing.
+
+---
+
 ## D-10 — KB MVP list gates Phase 2
 
 **Status:** Resolved (2026-06-01) — tooling ready; production audit pending WhatsApp export

@@ -341,4 +341,33 @@ See entity diagram above. Cascade: deleting a restaurant removes branches; branc
 
 ## Customer/branch mapping chain
 
-<!-- Task 1.6 implements lookup logic using these tables. -->
+**Task 1.6** — implemented in `CustomerMappingService` + `CustomerMappingRepository`.
+
+### Lookup paths
+
+| Entry | Method | Use case |
+|-------|--------|----------|
+| `butterpos_user_id` | `resolve_by_user_id()` | Tablet widget / JWT `subject` |
+| `provider_contact_id` | `resolve_by_contact_id()` | Chatwoot webhook sender id |
+
+### Chain
+
+```
+users.butterpos_user_id → users.branch_id → branches → restaurants → sla_config (by plan_type)
+```
+
+### Result model
+
+`CustomerMappingResult` (`app/models/customer_mapping.py`):
+
+| Field | Purpose |
+|-------|---------|
+| `status` | `active`, `unknown_user`, `no_branch`, `payment_due`, `plan_expired`, `outside_coverage`, `sla_not_configured` |
+| `max_agent_tier` | 1 (restricted) or 3 (full) — see D-15 |
+| `status_message` | Human/agent-readable reason |
+| `branch_timezone` | IANA tz for coverage window |
+| `sla` | `SlaSnapshot` with coverage + response targets when configured |
+
+Edge-case behavior: **D-15** in `DECISIONS.md`.
+
+---
