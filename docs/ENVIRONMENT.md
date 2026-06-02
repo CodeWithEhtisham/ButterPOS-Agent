@@ -1,6 +1,8 @@
 # Environment
 
-Configuration, credentials, and environment-specific settings.
+Configuration is **centralized in `.env`**. The app loads every tunable through `app/core/config.py` (`Settings` via pydantic-settings). Copy [`.env.example`](../.env.example) to `.env` and edit one file — no need to hunt through code.
+
+**Quick reference:** see `.env.example` for the full list with defaults. Below: grouped tables for documentation.
 
 ---
 
@@ -17,6 +19,8 @@ Configuration, credentials, and environment-specific settings.
 | `CHATWOOT_AGENT_ID` | Optional | Agent user id for live `assign_agent` validation (Task 1.8.2) |
 | `CHATWOOT_WEBHOOK_SECRET` | Phase 1 | HMAC secret for inbound webhook verification |
 | `CHATWOOT_WEBHOOK_MAX_AGE_SECONDS` | Optional | Replay window for webhook timestamps (default `300`) |
+| `CHATWOOT_WEBHOOK_SUBSCRIPTIONS` | Optional | Comma-separated events to register (see `.env.example`) |
+| `CHATWOOT_HTTP_RETRY_BACKOFF_MAX_SECONDS` | Optional | Max sleep between Chatwoot HTTP retries (default `2`) |
 | `CHATWOOT_REQUEST_TIMEOUT_SECONDS` | Optional | HTTP timeout for Chatwoot API (default `30`) |
 | `CHATWOOT_MAX_RETRIES` | Optional | Retries on transient Chatwoot failures (default `3`) |
 
@@ -126,6 +130,7 @@ Requires `REDIS_URL` for Celery broker and DLQ. Run worker + beat per `DEPLOYMEN
 | `RATE_LIMIT_RESTAURANT_MESSAGES_PER_DAY` | Optional | Per-restaurant incoming message cap (default `100`) |
 | `RATE_LIMIT_RESTAURANT_WINDOW_SECONDS` | Optional | Restaurant sliding window (default `86400`) |
 | `RATE_LIMIT_RESTAURANT_REDIS_PREFIX` | Optional | Redis key prefix (default `ratelimit:restaurant:`) |
+| `RATE_LIMIT_RESTAURANT_ID_ATTRIBUTE_KEYS` | Optional | Comma-separated custom_attribute keys for restaurant scope |
 
 Requires `REDIS_URL` for production rate limiting. Outgoing messages and non-`message_created` events are not counted.
 
@@ -135,16 +140,28 @@ Requires `REDIS_URL` for production rate limiting. Outgoing messages and non-`me
 |----------|----------|-------------|
 | `REQUEST_DEDUP_REDIS_PREFIX` | Optional | Redis key prefix for ticket-creation dedup (default `dedup:request:`) |
 | `REQUEST_DEDUP_TTL_SECONDS` | Optional | Cached `create_ticket` result TTL (default `86400`) |
+| `REQUEST_DEDUP_LOCK_TTL_SECONDS` | Optional | In-flight create_ticket lock TTL (default `60`) |
+| `REQUEST_DEDUP_IN_PROGRESS_POLL_SECONDS` | Optional | Poll interval when waiting on peer dedup (default `0.05`) |
+| `REQUEST_DEDUP_IN_PROGRESS_MAX_WAIT_SECONDS` | Optional | Max wait for peer dedup (default `2`) |
+| `TICKET_DEDUP_METADATA_KEYS` | Optional | Comma-separated metadata keys for ticket dedup |
 | `WEBHOOK_HOT_DEDUP_REDIS_PREFIX` | Optional | Redis hot-path prefix for webhook idempotency (default `dedup:webhook:`) |
 | `WEBHOOK_HOT_DEDUP_TTL_SECONDS` | Optional | Hot webhook dedup TTL (default `86400`) |
 
-### Local validation (Task 1.8)
+### Celery / beat schedules
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `MIDDLEWARE_BASE_URL` | Optional | Base URL for smoke/Chatwoot scripts (default `http://127.0.0.1:8000`) |
-| `CHATWOOT_AGENT_ID` | Optional | Include `assign_agent` in `validate_chatwoot.py` |
-| `BUTTERPOS_DATA_EXPORT` | Production seed | Path to signed-off tenant export JSON/CSV |
+| `CELERY_TIMEZONE` | Optional | Celery timezone (default `UTC`) |
+| `WEBHOOK_DLQ_RETRY_INTERVAL_SECONDS` | Optional | DLQ retry beat interval (default `300` = 5 min) |
+| `WEBHOOK_POLLING_INTERVAL_SECONDS` | Optional | Ticket polling beat interval (default `600` = 10 min) |
+
+### HTTP server / scripts
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MIDDLEWARE_HOST` | Optional | Uvicorn bind host (default `0.0.0.0`) |
+| `MIDDLEWARE_PORT` | Optional | Uvicorn bind port (default `8000`) |
+| `MIDDLEWARE_BASE_URL` | Optional | Base URL for smoke/validation scripts |
 
 ## Credential locations
 

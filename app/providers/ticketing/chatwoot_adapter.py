@@ -222,10 +222,11 @@ class ChatwootAdapter(TicketingProvider):
         subscriptions: list[str] | None = None,
     ) -> dict:
         """Register account webhook in Chatwoot — save returned secret to CHATWOOT_WEBHOOK_SECRET."""
+        resolved = subscriptions or self._settings.chatwoot_webhook_subscription_list()
         return await register_account_webhook(
             self._client,
             callback_url,
-            subscriptions=subscriptions,
+            subscriptions=resolved,
         )
 
     async def list_tickets_updated_since(self, since: datetime) -> list[StandardTicket]:

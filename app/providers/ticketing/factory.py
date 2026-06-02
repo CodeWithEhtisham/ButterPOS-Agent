@@ -45,6 +45,9 @@ def create_ticketing_provider(
         inner,
         store,
         ttl_seconds=settings.request_dedup_ttl_seconds,
+        dedup_metadata_keys=tuple(settings.ticket_dedup_metadata_key_list()),
+        in_progress_poll_seconds=settings.request_dedup_in_progress_poll_seconds,
+        in_progress_max_wait_seconds=settings.request_dedup_in_progress_max_wait_seconds,
     )
     cache = read_cache or build_ticketing_read_cache(settings)
     return CachingTicketingProvider(deduped, cache)

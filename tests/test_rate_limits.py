@@ -25,6 +25,8 @@ from app.services.webhook_dispatch import NoOpWebhookDispatcher
 from app.services.webhook_service import WebhookService
 from tests.support.idempotency_memory_session import IdempotencyMemorySession
 
+RESTAURANT_ATTRS = ("restaurant_id", "butterpos_restaurant_id")
+
 
 def _incoming_event(
     *,
@@ -59,7 +61,7 @@ def test_should_rate_limit_incoming_message_only() -> None:
 def test_extract_rate_limit_keys() -> None:
     event = _incoming_event(contact_id="42", restaurant_id="99")
     assert extract_user_rate_limit_key(event) == "42"
-    assert extract_restaurant_rate_limit_key(event) == "99"
+    assert extract_restaurant_rate_limit_key(event, attribute_names=RESTAURANT_ATTRS) == "99"
 
 
 def test_sliding_window_blocks_after_limit() -> None:
@@ -75,7 +77,7 @@ def test_sliding_window_blocks_after_limit() -> None:
 def test_inbound_rate_limiter_enforces_user_quota() -> None:
     user = InMemorySlidingWindowRateLimiter(limit=2, window_seconds=3600)
     restaurant = InMemorySlidingWindowRateLimiter(limit=100, window_seconds=86400)
-    limiter = InboundMessageRateLimiter(user, restaurant)
+    limiter = InboundMessageRateLimiter(user, restaurant, restaurant_attribute_names=RESTAURANT_ATTRS)
 
     async def _run() -> None:
         event = _incoming_event(restaurant_id=None)
@@ -90,7 +92,7 @@ def test_inbound_rate_limiter_enforces_user_quota() -> None:
 def test_inbound_rate_limiter_enforces_restaurant_quota() -> None:
     user = InMemorySlidingWindowRateLimiter(limit=100, window_seconds=3600)
     restaurant = InMemorySlidingWindowRateLimiter(limit=1, window_seconds=86400)
-    limiter = InboundMessageRateLimiter(user, restaurant)
+    limiter = InboundMessageRateLimiter(user, restaurant, restaurant_attribute_names=RESTAURANT_ATTRS)
 
     async def _run() -> None:
         await limiter.check(_incoming_event(message_id="1", contact_id="a"))
@@ -103,7 +105,11 @@ def test_inbound_rate_limiter_enforces_restaurant_quota() -> None:
 def test_webhook_service_returns_rate_limited_without_dispatch() -> None:
     user = InMemorySlidingWindowRateLimiter(limit=1, window_seconds=3600)
     restaurant = InMemorySlidingWindowRateLimiter(limit=100, window_seconds=86400)
-    rate_limiter = InboundMessageRateLimiter(user, restaurant)
+    rate_limiter = InboundMessageRateLimiter(
+        user,
+        restaurant,
+        restaurant_attribute_names=RESTAURANT_ATTRS,
+    )
 
     provider = MagicMock()
     provider.provider_name = "chatwoot"

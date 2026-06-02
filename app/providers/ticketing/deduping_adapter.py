@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 
 from app.core.dedup.store import DedupClaimResult, DedupStore
-from app.core.dedup.ticket_creation_store import extract_ticket_creation_dedup_key
+from app.core.dedup.ticket_creation_store import DEDUP_METADATA_KEYS, extract_ticket_creation_dedup_key
 from app.core.logging_config import get_logger
 from app.models.standard import (
     AddCommentRequest,
@@ -26,9 +26,6 @@ from app.providers.ticketing.base import TicketingProvider
 
 logger = get_logger("app.dedup")
 
-IN_PROGRESS_POLL_INTERVAL_SECONDS = 0.05
-IN_PROGRESS_MAX_WAIT_SECONDS = 2.0
-
 
 class DedupingTicketingProvider(TicketingProvider):
     """Decorator — returns cached StandardTicket when the same client request id is replayed."""
@@ -39,10 +36,16 @@ class DedupingTicketingProvider(TicketingProvider):
         store: DedupStore,
         *,
         ttl_seconds: int,
+        dedup_metadata_keys: tuple[str, ...] = DEDUP_METADATA_KEYS,
+        in_progress_poll_seconds: float = 0.05,
+        in_progress_max_wait_seconds: float = 2.0,
     ) -> None:
         self._inner = inner
         self._store = store
         self._ttl_seconds = ttl_seconds
+        self._dedup_metadata_keys = dedup_metadata_keys
+        self._in_progress_poll_seconds = in_progress_poll_seconds
+        self._in_progress_max_wait_seconds = in_progress_max_wait_seconds
         self.provider_name = inner.provider_name
 
     @property
@@ -50,7 +53,10 @@ class DedupingTicketingProvider(TicketingProvider):
         return self._inner
 
     async def create_ticket(self, request: CreateTicketRequest) -> StandardTicket:
-        dedup_key = extract_ticket_creation_dedup_key(request.metadata)
+        dedup_key = extract_ticket_creation_dedup_key(
+            request.metadata,
+            key_names=self._dedup_metadata_keys,
+        )
         if dedup_key is None:
             return await self._inner.create_ticket(request)
 
@@ -94,12 +100,12 @@ class DedupingTicketingProvider(TicketingProvider):
         return ticket
 
     async def _wait_for_peer_result(self, dedup_key: str) -> StandardTicket | None:
-        deadline = time.monotonic() + IN_PROGRESS_MAX_WAIT_SECONDS
+        deadline = time.monotonic() + self._in_progress_max_wait_seconds
         while time.monotonic() < deadline:
             cached = await self._store.get(dedup_key)
             if cached is not None:
                 return StandardTicket.model_validate(cached)
-            await asyncio.sleep(IN_PROGRESS_POLL_INTERVAL_SECONDS)
+            await asyncio.sleep(self._in_progress_poll_seconds)
         return None
 
     async def get_ticket(self, provider_ticket_id: str) -> StandardTicket:

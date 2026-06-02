@@ -3,18 +3,21 @@
 
 from __future__ import annotations
 
-import os
+import sys
+from pathlib import Path
 
-from dotenv import load_dotenv
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-load_dotenv()
+from app.core.config import get_settings
 
 
 def check_postgres() -> tuple[bool, str]:
-    url = os.getenv("DATABASE_URL", "")
+    settings = get_settings()
+    url = settings.database_url
     if not url:
         return False, "DATABASE_URL not set"
-    # Normalize async URL for psycopg2 sync check
     sync_url = url.replace("postgresql+asyncpg://", "postgresql://").replace(
         "postgres+asyncpg://", "postgresql://"
     )
@@ -34,7 +37,8 @@ def check_postgres() -> tuple[bool, str]:
 
 
 def check_redis() -> tuple[bool, str]:
-    url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    settings = get_settings()
+    url = settings.redis_url
     try:
         import redis
 
@@ -49,6 +53,7 @@ def check_redis() -> tuple[bool, str]:
 
 
 def main() -> int:
+    get_settings.cache_clear()
     print("=== Infrastructure check (Postgres + Redis) ===\n")
     ok = True
 

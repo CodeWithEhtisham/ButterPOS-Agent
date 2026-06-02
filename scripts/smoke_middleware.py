@@ -4,16 +4,17 @@
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
 import httpx
-from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+from app.core.config import get_settings
+from scripts.check_infra import check_postgres, check_redis
 
 
 def _check(name: str, ok: bool, detail: str) -> bool:
@@ -22,11 +23,13 @@ def _check(name: str, ok: bool, detail: str) -> bool:
 
 
 def main() -> int:
-    load_dotenv()
+    get_settings.cache_clear()
+    settings = get_settings()
+
     parser = argparse.ArgumentParser(description="Middleware smoke test")
     parser.add_argument(
         "--base-url",
-        default=os.getenv("MIDDLEWARE_BASE_URL", "http://127.0.0.1:8000"),
+        default=settings.middleware_base_url,
         help="Running middleware base URL",
     )
     parser.add_argument(
@@ -41,17 +44,13 @@ def main() -> int:
     print("=== Middleware smoke test (Task 1.8.1) ===\n")
 
     if not args.skip_infra:
-        from scripts.check_infra import check_postgres, check_redis
-
         pg_ok, pg_msg = check_postgres()
         ok &= _check("infra_postgres", pg_ok, pg_msg)
         redis_ok, redis_msg = check_redis()
         ok &= _check("infra_redis", redis_ok, redis_msg)
         print()
 
-    client_id = os.getenv("API_CLIENT_ID", "")
-    client_secret = os.getenv("API_CLIENT_SECRET", "")
-    if not client_id or not client_secret:
+    if not settings.api_client_id or not settings.api_client_secret:
         ok &= _check("env_auth", False, "API_CLIENT_ID / API_CLIENT_SECRET not set")
         print("\nRESULT: FAIL")
         return 1
@@ -76,8 +75,8 @@ def main() -> int:
             token_resp = client.post(
                 "/api/v1/auth/token",
                 json={
-                    "client_id": client_id,
-                    "client_secret": client_secret,
+                    "client_id": settings.api_client_id,
+                    "client_secret": settings.api_client_secret,
                     "subject": "smoke-test",
                 },
             )
@@ -94,7 +93,10 @@ def main() -> int:
                 ok &= _check("auth_me", me_ok, f"HTTP {me.status_code}")
     except httpx.ConnectError as exc:
         ok &= _check("http_connect", False, str(exc))
-        print("\nHint: start the app with: uvicorn app.main:app --host 0.0.0.0 --port 8000")
+        print(
+            f"\nHint: start the app with: "
+            f"uvicorn app.main:app --host {settings.middleware_host} --port {settings.middleware_port}"
+        )
     except Exception as exc:  # noqa: BLE001
         ok &= _check("http_request", False, str(exc))
 

@@ -41,9 +41,16 @@ class DedupStore(ABC):
 class RedisDedupStore(DedupStore):
     """Production dedup — separate Redis keys for lock and result."""
 
-    def __init__(self, redis_url: str, *, key_prefix: str) -> None:
+    def __init__(
+        self,
+        redis_url: str,
+        *,
+        key_prefix: str,
+        lock_ttl_seconds: int = 60,
+    ) -> None:
         self._redis = aioredis.from_url(redis_url, decode_responses=True)
         self._key_prefix = key_prefix
+        self._lock_ttl_seconds = lock_ttl_seconds
 
     def _result_key(self, key: str) -> str:
         return f"{self._key_prefix}{key}:result"
@@ -63,7 +70,7 @@ class RedisDedupStore(DedupStore):
         if existing is not None:
             return DedupClaimResult.EXISTS
 
-        lock_ttl = min(ttl_seconds, 60)
+        lock_ttl = min(ttl_seconds, self._lock_ttl_seconds)
         acquired = await self._redis.set(self._lock_key(key), "1", nx=True, ex=lock_ttl)
         if acquired:
             return DedupClaimResult.CLAIMED

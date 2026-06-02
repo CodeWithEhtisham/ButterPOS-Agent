@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import os
 import sys
 import uuid
 from dataclasses import asdict, dataclass
@@ -48,14 +47,6 @@ class ValidationReport:
     contact_id: str | None = None
     ticket_id: str | None = None
 
-
-def _required_env() -> list[str]:
-    return [
-        "CHATWOOT_BASE_URL",
-        "CHATWOOT_API_TOKEN",
-        "CHATWOOT_ACCOUNT_ID",
-        "CHATWOOT_INBOX_ID",
-    ]
 
 
 async def validate_adapter(settings: Settings) -> ValidationReport:
@@ -162,7 +153,7 @@ async def validate_adapter(settings: Settings) -> ValidationReport:
             ),
         )
 
-        agent_id = os.getenv("CHATWOOT_AGENT_ID", "").strip()
+        agent_id = settings.chatwoot_agent_id.strip()
         if agent_id:
             assigned = await adapter.assign_agent(
                 AssignAgentRequest(provider_ticket_id=ticket_id, assignee_id=agent_id),
@@ -239,35 +230,33 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Emit machine-readable report")
     parser.add_argument(
         "--middleware-url",
-        default=os.getenv("MIDDLEWARE_BASE_URL", ""),
+        default="",
         help="Optional running middleware URL for /ticketing-health probe",
     )
     args = parser.parse_args()
 
-    missing = [name for name in _required_env() if not os.getenv(name)]
-    if missing:
-        print("Missing env:", ", ".join(missing), file=sys.stderr)
-        return 1
-
     get_settings.cache_clear()
     settings = get_settings()
+    middleware_url = args.middleware_url or settings.middleware_base_url
+
     config_missing = missing_config_fields(settings)
-    if config_missing or not settings.chatwoot_inbox_id:
-        if not settings.chatwoot_inbox_id and "CHATWOOT_INBOX_ID" not in config_missing:
-            config_missing.append("CHATWOOT_INBOX_ID")
+    if not settings.chatwoot_inbox_id:
+        config_missing.append("CHATWOOT_INBOX_ID")
+    if config_missing:
         print("Missing Chatwoot config:", ", ".join(config_missing), file=sys.stderr)
         return 1
 
     report = asyncio.run(validate_adapter(settings))
 
-    if args.middleware_url:
-        client_id = os.getenv("API_CLIENT_ID", "")
-        client_secret = os.getenv("API_CLIENT_SECRET", "")
-        if client_id and client_secret:
-            report.checks.append(
-                _middleware_ticketing_health(args.middleware_url, client_id, client_secret),
-            )
-            report.passed = all(check.passed for check in report.checks)
+    if middleware_url and settings.api_client_id and settings.api_client_secret:
+        report.checks.append(
+            _middleware_ticketing_health(
+                middleware_url,
+                settings.api_client_id,
+                settings.api_client_secret,
+            ),
+        )
+        report.passed = all(check.passed for check in report.checks)
 
     if args.json:
         print(json.dumps(asdict(report), indent=2))

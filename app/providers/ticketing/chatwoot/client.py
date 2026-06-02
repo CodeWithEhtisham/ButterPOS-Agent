@@ -108,7 +108,9 @@ class ChatwootClient:
                             "attempt": attempt,
                         },
                     )
-                    await asyncio.sleep(min(0.5 * attempt, 2.0))
+                    await asyncio.sleep(
+                        min(0.5 * attempt, self._settings.chatwoot_http_retry_backoff_max_seconds)
+                    )
                     continue
                 if response.is_error:
                     raise ChatwootAPIError(

@@ -39,3 +39,24 @@ def test_empty_chatwoot_ids_coerced_to_zero() -> None:
     settings = Settings(_env_file=None, chatwoot_account_id="", chatwoot_inbox_id="")
     assert settings.chatwoot_account_id == 0
     assert settings.chatwoot_inbox_id == 0
+
+
+def test_csv_settings_parsed() -> None:
+    settings = Settings(
+        _env_file=None,
+        chatwoot_webhook_subscriptions="message_created, conversation_updated",
+        rate_limit_restaurant_id_attribute_keys="restaurant_id,custom_rest_id",
+        ticket_dedup_metadata_keys="client_request_id,idempotency_key",
+    )
+    assert settings.chatwoot_webhook_subscription_list() == [
+        "message_created",
+        "conversation_updated",
+    ]
+    assert settings.rate_limit_restaurant_attribute_names() == [
+        "restaurant_id",
+        "custom_rest_id",
+    ]
+    assert settings.ticket_dedup_metadata_key_list() == [
+        "client_request_id",
+        "idempotency_key",
+    ]

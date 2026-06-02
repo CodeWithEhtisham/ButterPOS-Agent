@@ -17,8 +17,6 @@ from app.models.standard import StandardEvent, StandardEventType
 
 logger = get_logger("app.rate_limit")
 
-RESTAURANT_ID_ATTRS = ("restaurant_id", "butterpos_restaurant_id")
-
 
 def should_rate_limit_inbound_message(event: StandardEvent) -> bool:
     """Only count new incoming customer messages."""
@@ -37,25 +35,29 @@ def extract_user_rate_limit_key(event: StandardEvent) -> str | None:
     return None
 
 
-def extract_restaurant_rate_limit_key(event: StandardEvent) -> str | None:
+def extract_restaurant_rate_limit_key(
+    event: StandardEvent,
+    *,
+    attribute_names: tuple[str, ...],
+) -> str | None:
     """Restaurant scope — from conversation custom_attributes when present."""
     conversation = event.raw_payload.get("conversation")
     if isinstance(conversation, dict):
-        found = _restaurant_id_from_attrs(conversation.get("custom_attributes"))
+        found = _restaurant_id_from_attrs(conversation.get("custom_attributes"), attribute_names)
         if found:
             return found
     meta = event.raw_payload.get("meta")
     if isinstance(meta, dict):
-        found = _restaurant_id_from_attrs(meta.get("custom_attributes"))
+        found = _restaurant_id_from_attrs(meta.get("custom_attributes"), attribute_names)
         if found:
             return found
-    return _restaurant_id_from_attrs(event.raw_payload.get("custom_attributes"))
+    return _restaurant_id_from_attrs(event.raw_payload.get("custom_attributes"), attribute_names)
 
 
-def _restaurant_id_from_attrs(attrs: Any) -> str | None:
+def _restaurant_id_from_attrs(attrs: Any, attribute_names: tuple[str, ...]) -> str | None:
     if not isinstance(attrs, dict):
         return None
-    for name in RESTAURANT_ID_ATTRS:
+    for name in attribute_names:
         value = attrs.get(name)
         if value is not None and str(value).strip():
             return str(value).strip()
@@ -69,9 +71,12 @@ class InboundMessageRateLimiter:
         self,
         user_limiter: SlidingWindowRateLimiter,
         restaurant_limiter: SlidingWindowRateLimiter,
+        *,
+        restaurant_attribute_names: tuple[str, ...],
     ) -> None:
         self._user_limiter = user_limiter
         self._restaurant_limiter = restaurant_limiter
+        self._restaurant_attribute_names = restaurant_attribute_names
 
     async def check(self, event: StandardEvent) -> None:
         """Raise RateLimitExceededError when an inbound message exceeds quotas."""
@@ -90,7 +95,10 @@ class InboundMessageRateLimiter:
                 )
                 raise RateLimitExceededError("User message rate limit exceeded")
 
-        restaurant_key = extract_restaurant_rate_limit_key(event)
+        restaurant_key = extract_restaurant_rate_limit_key(
+            event,
+            attribute_names=self._restaurant_attribute_names,
+        )
         if restaurant_key is not None:
             allowed = await self._restaurant_limiter.allow(restaurant_key)
             if not allowed:
@@ -121,7 +129,11 @@ def build_inbound_message_rate_limiter(
         limit=settings.rate_limit_restaurant_messages_per_day,
         window_seconds=settings.rate_limit_restaurant_window_seconds,
     )
-    return InboundMessageRateLimiter(user, restaurant)
+    return InboundMessageRateLimiter(
+        user,
+        restaurant,
+        restaurant_attribute_names=tuple(settings.rate_limit_restaurant_attribute_names()),
+    )
 
 
 @lru_cache
