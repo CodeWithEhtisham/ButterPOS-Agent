@@ -25,7 +25,7 @@ Platform-agnostic types used by `TicketingProvider` and webhook processing. Defi
 | `closed` | Terminal state |
 | `reopened` | Previously closed, active again |
 
-Chatwoot mapping table: Task 1.3 (`ChatwootAdapter`).
+Chatwoot mapping table: Task 1.3 (`ChatwootAdapter`) — see `API_SPEC.md` for full 12-value ↔ 4-value mapping. Native Chatwoot statuses: `open`, `resolved`, `pending`, `snoozed`. Non-native StandardStatus values round-trip via `custom_attributes.standard_status`.
 
 ### `StandardEventType`
 

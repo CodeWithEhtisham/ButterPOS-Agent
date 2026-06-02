@@ -7,6 +7,9 @@ from typing import Any
 
 from app.models.standard import StandardStatus, StandardTicket
 
+STANDARD_STATUS_ATTRIBUTE = "standard_status"
+
+# Chatwoot native statuses: open, resolved, pending, snoozed (Application API).
 CHATWOOT_TO_STANDARD_STATUS: dict[str, StandardStatus] = {
     "open": StandardStatus.OPEN,
     "resolved": StandardStatus.RESOLVED,
@@ -14,10 +17,40 @@ CHATWOOT_TO_STANDARD_STATUS: dict[str, StandardStatus] = {
     "snoozed": StandardStatus.SNOOZED,
 }
 
+STANDARD_TO_CHATWOOT_STATUS: dict[StandardStatus, str] = {
+    StandardStatus.NEW: "open",
+    StandardStatus.OPEN: "open",
+    StandardStatus.PENDING: "pending",
+    StandardStatus.IN_PROGRESS: "open",
+    StandardStatus.WAITING_ON_CUSTOMER: "pending",
+    StandardStatus.WAITING_ON_INTERNAL: "open",
+    StandardStatus.ESCALATED: "open",
+    StandardStatus.SNOOZED: "snoozed",
+    StandardStatus.ON_HOLD: "pending",
+    StandardStatus.RESOLVED: "resolved",
+    StandardStatus.CLOSED: "resolved",
+    StandardStatus.REOPENED: "open",
+}
 
-def chatwoot_status_to_standard(status: str) -> StandardStatus:
-    """Map Chatwoot conversation status to StandardStatus (expanded in Task 1.3.3)."""
-    return CHATWOOT_TO_STANDARD_STATUS.get(status.lower(), StandardStatus.OPEN)
+
+def standard_status_to_chatwoot(status: StandardStatus) -> str:
+    """Map middleware StandardStatus to Chatwoot toggle_status value."""
+    return STANDARD_TO_CHATWOOT_STATUS[status]
+
+
+def chatwoot_status_to_standard(
+    chatwoot_status: str,
+    custom_attributes: dict[str, Any] | None = None,
+) -> StandardStatus:
+    """Map Chatwoot status to StandardStatus; prefer persisted standard_status attribute."""
+    attrs = custom_attributes if isinstance(custom_attributes, dict) else {}
+    stored = attrs.get(STANDARD_STATUS_ATTRIBUTE)
+    if isinstance(stored, str):
+        try:
+            return StandardStatus(stored)
+        except ValueError:
+            pass
+    return CHATWOOT_TO_STANDARD_STATUS.get(chatwoot_status.lower(), StandardStatus.OPEN)
 
 
 def parse_chatwoot_timestamp(value: Any) -> datetime | None:
@@ -32,7 +65,7 @@ def parse_chatwoot_timestamp(value: Any) -> datetime | None:
     return None
 
 
-def _unwrap_conversation(data: dict[str, Any]) -> dict[str, Any]:
+def unwrap_conversation(data: dict[str, Any]) -> dict[str, Any]:
     if "conversation" in data and isinstance(data["conversation"], dict):
         return data["conversation"]
     if "payload" in data and isinstance(data["payload"], dict):
@@ -74,6 +107,15 @@ def _extract_tags(conversation: dict[str, Any]) -> list[str]:
     return tags
 
 
+def _subject_from_conversation(conversation: dict[str, Any]) -> str | None:
+    custom_attributes = conversation.get("custom_attributes")
+    if isinstance(custom_attributes, dict):
+        subject = custom_attributes.get("subject")
+        if subject is not None:
+            return str(subject)
+    return None
+
+
 def conversation_to_standard_ticket(
     data: dict[str, Any],
     *,
@@ -81,20 +123,27 @@ def conversation_to_standard_ticket(
     extra_metadata: dict[str, Any] | None = None,
 ) -> StandardTicket:
     """Convert Chatwoot conversation JSON to StandardTicket."""
-    conversation = _unwrap_conversation(data)
+    conversation = unwrap_conversation(data)
     conv_id = conversation.get("id")
     if conv_id is None:
         raise ValueError("Chatwoot conversation response missing id")
 
-    metadata = dict(extra_metadata or {})
     custom_attributes = conversation.get("custom_attributes")
-    if isinstance(custom_attributes, dict):
-        metadata.update(custom_attributes)
+    if not isinstance(custom_attributes, dict):
+        custom_attributes = {}
+
+    metadata = dict(extra_metadata or {})
+    metadata.update(custom_attributes)
+
+    resolved_subject = subject or _subject_from_conversation(conversation)
 
     return StandardTicket(
         provider_ticket_id=str(conv_id),
-        status=chatwoot_status_to_standard(str(conversation.get("status", "open"))),
-        subject=subject,
+        status=chatwoot_status_to_standard(
+            str(conversation.get("status", "open")),
+            custom_attributes,
+        ),
+        subject=resolved_subject,
         provider_contact_id=_extract_contact_id(conversation),
         assignee_id=_extract_assignee_id(conversation),
         tags=_extract_tags(conversation),

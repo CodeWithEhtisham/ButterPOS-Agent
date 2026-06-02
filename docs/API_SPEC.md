@@ -82,15 +82,35 @@ Pydantic models: `app/schemas/auth.py`
 
 ## Status mappings
 
-`StandardStatus` (12 values) is the middleware canonical lifecycle. Adapters translate to/from platform statuses.
+`StandardStatus` (12 values) is the middleware canonical lifecycle. Chatwoot exposes **four** native statuses (`open`, `resolved`, `pending`, `snoozed`). The adapter maps between them and persists the canonical value in `custom_attributes.standard_status` when they diverge.
 
-| StandardStatus | Chatwoot (Task 1.3) |
-|----------------|---------------------|
-| `open` | `open` |
-| `pending` | `pending` |
-| `resolved` | `resolved` |
-| `snoozed` | `snoozed` |
-| _Others_ | Mapped in Task 1.3.3 (`get_ticket` / `update_status`) |
+| StandardStatus | Chatwoot `toggle_status` | Notes |
+|----------------|--------------------------|-------|
+| `new` | `open` | |
+| `open` | `open` | |
+| `pending` | `pending` | |
+| `in_progress` | `open` | Canonical value stored in `custom_attributes.standard_status` |
+| `waiting_on_customer` | `pending` | Stored in `standard_status` |
+| `waiting_on_internal` | `open` | Stored in `standard_status` |
+| `escalated` | `open` | Stored in `standard_status` |
+| `snoozed` | `snoozed` | |
+| `on_hold` | `pending` | Stored in `standard_status` |
+| `resolved` | `resolved` | |
+| `closed` | `resolved` | Stored in `standard_status` |
+| `reopened` | `open` | Stored in `standard_status` |
+
+**Read path:** `chatwoot_status_to_standard()` prefers `custom_attributes.standard_status` when set; otherwise maps native Chatwoot status.
+
+Implementation: `app/providers/ticketing/chatwoot/mappers.py`.
+
+### `get_ticket()` / `update_status()` (Task 1.3.3)
+
+| Method | Chatwoot API |
+|--------|--------------|
+| `get_ticket(id)` | `GET /conversations/{id}` → `StandardTicket` |
+| `update_status(req)` | `POST /conversations/{id}/toggle_status` then `POST .../custom_attributes` then `GET` |
+
+---
 
 ### `create_ticket()` (Task 1.3.2)
 

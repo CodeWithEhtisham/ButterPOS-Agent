@@ -42,6 +42,10 @@ def _conversation_body(conversation_id: int = 9001, contact_id: int = 101) -> di
 def test_chatwoot_status_mapping() -> None:
     assert chatwoot_status_to_standard("open") is StandardStatus.OPEN
     assert chatwoot_status_to_standard("resolved") is StandardStatus.RESOLVED
+    assert chatwoot_status_to_standard(
+        "open",
+        {"standard_status": "in_progress"},
+    ) is StandardStatus.IN_PROGRESS
 
 
 def test_conversation_to_standard_ticket() -> None:

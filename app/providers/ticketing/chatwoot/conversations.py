@@ -8,6 +8,7 @@ from typing import Any
 
 from app.providers.ticketing.chatwoot.client import ChatwootClient
 from app.providers.ticketing.chatwoot.errors import ChatwootAPIError
+from app.providers.ticketing.chatwoot.mappers import unwrap_conversation
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,61 @@ def parse_contact_id(provider_contact_id: str) -> int:
             f"Invalid provider_contact_id: {provider_contact_id!r}",
             status_code=400,
         ) from exc
+
+
+def parse_conversation_id(provider_ticket_id: str) -> int:
+    try:
+        return int(provider_ticket_id)
+    except ValueError as exc:
+        raise ChatwootAPIError(
+            f"Invalid provider_ticket_id: {provider_ticket_id!r}",
+            status_code=400,
+        ) from exc
+
+
+async def get_conversation(client: ChatwootClient, conversation_id: int) -> dict[str, Any]:
+    """GET /conversations/{id}."""
+    response = await client.request(
+        "GET",
+        client.account_path(f"/conversations/{conversation_id}"),
+    )
+    data = response.json()
+    return data if isinstance(data, dict) else {}
+
+
+async def toggle_conversation_status(
+    client: ChatwootClient,
+    conversation_id: int,
+    *,
+    status: str,
+    snoozed_until: int | None = None,
+) -> None:
+    """POST /conversations/{id}/toggle_status."""
+    payload: dict[str, Any] = {"status": status}
+    if snoozed_until is not None:
+        payload["snoozed_until"] = snoozed_until
+    await client.request(
+        "POST",
+        client.account_path(f"/conversations/{conversation_id}/toggle_status"),
+        json=payload,
+    )
+    logger.info(
+        "Chatwoot conversation status toggled",
+        extra={"conversation_id": conversation_id, "status": status},
+    )
+
+
+async def set_conversation_custom_attributes(
+    client: ChatwootClient,
+    conversation_id: int,
+    custom_attributes: dict[str, Any],
+) -> None:
+    """POST /conversations/{id}/custom_attributes."""
+    await client.request(
+        "POST",
+        client.account_path(f"/conversations/{conversation_id}/custom_attributes"),
+        json={"custom_attributes": custom_attributes},
+    )
 
 
 async def create_conversation(
@@ -53,7 +109,7 @@ async def create_conversation(
         json=payload,
     )
     data = response.json()
-    conversation_id = _unwrap_conversation(data).get("id")
+    conversation_id = unwrap_conversation(data).get("id")
     logger.info(
         "Chatwoot conversation created",
         extra={
@@ -99,14 +155,3 @@ async def add_conversation_labels(
         client.account_path(f"/conversations/{conversation_id}/labels"),
         json={"labels": labels},
     )
-
-
-def _unwrap_conversation(data: dict[str, Any]) -> dict[str, Any]:
-    if "conversation" in data and isinstance(data["conversation"], dict):
-        return data["conversation"]
-    if "payload" in data and isinstance(data["payload"], dict):
-        payload = data["payload"]
-        if "conversation" in payload and isinstance(payload["conversation"], dict):
-            return payload["conversation"]
-        return payload
-    return data
