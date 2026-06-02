@@ -63,7 +63,7 @@ REST API contract for the ButterPOS AI Support Agent middleware. All endpoints l
 
 **Headers:** `Authorization: Bearer <access_token>`
 
-**Response `200`:** `ProviderHealth` — config probe via factory-wired adapter
+**Response `200`:** `ProviderHealth` — live Chatwoot probe (`GET /api`) via `ChatwootAdapter.health_check()`; includes `latency_ms` when healthy.
 
 ---
 

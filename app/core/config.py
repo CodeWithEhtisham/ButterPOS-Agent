@@ -45,6 +45,14 @@ class Settings(BaseSettings):
     chatwoot_account_id: int = 0
     chatwoot_inbox_id: int = 0
     chatwoot_webhook_secret: str = ""
+    chatwoot_request_timeout_seconds: float = Field(
+        default=30.0,
+        description="HTTP timeout for Chatwoot Application API calls",
+    )
+    chatwoot_max_retries: int = Field(
+        default=3,
+        description="Retry count for transient Chatwoot HTTP failures",
+    )
 
     # LLM via OpenRouter (D-11)
     openrouter_api_key: str = ""

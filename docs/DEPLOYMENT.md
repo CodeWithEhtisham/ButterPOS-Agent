@@ -69,7 +69,26 @@ docker compose logs -f    # tail logs
 
 Health checks: `pg_isready` (Postgres), `redis-cli ping` (Redis).
 
-### Why Postgres + Redis?
+### Database migrations (Task 1.2.6)
+
+After `docker compose up -d` and `.env` is configured:
+
+```bash
+pip install -r requirements.txt
+alembic upgrade head
+alembic current
+```
+
+| Command | Purpose |
+|---------|---------|
+| `alembic upgrade head` | Apply all pending migrations |
+| `alembic downgrade -1` | Roll back one revision |
+| `alembic revision --autogenerate -m "msg"` | Generate migration from ORM diff |
+| `alembic history` | List revision chain |
+
+Initial revision `20260602_0001` creates all nine middleware tables. App runtime uses asyncpg; Alembic uses psycopg2 via `app/db/url.py`.
+
+---
 
 - **Postgres** — durable state: ticket cache mirror, AI conversation history, KB articles, webhook audit log, SLA config. Required for audit trail and Phase 1 migrations (Alembic).
 - **Redis** — ephemeral/fast: 60s ticket cache, 24h contact cache, PII mask token map (24h TTL), rate limiting sliding windows, Celery task queue, webhook DLQ. Keeps hot paths off Postgres and supports sub-second invalidation on webhooks.

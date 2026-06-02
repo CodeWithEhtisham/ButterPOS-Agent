@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 
+import httpx
 import pytest
 from app.core.config import Settings, get_settings
 from app.main import create_app
+from app.providers.ticketing.chatwoot.client import ChatwootClient
 from app.providers.ticketing.chatwoot_adapter import ChatwootAdapter
 from app.providers.ticketing.factory import (
     UnknownTicketingProviderError,
@@ -54,10 +56,15 @@ def test_get_ticketing_provider_is_cached(factory_settings: Settings) -> None:
 
 
 def test_chatwoot_adapter_health_with_config(factory_settings: Settings) -> None:
-    adapter = ChatwootAdapter(factory_settings)
+    transport = httpx.MockTransport(lambda _request: httpx.Response(200, json={}))
+    adapter = ChatwootAdapter(
+        factory_settings,
+        client=ChatwootClient(factory_settings, transport=transport),
+    )
     health = asyncio.run(adapter.health_check())
     assert health.healthy is True
     assert health.provider == "chatwoot"
+    assert health.latency_ms is not None
 
 
 def test_chatwoot_adapter_health_missing_config() -> None:
@@ -73,9 +80,21 @@ def test_chatwoot_adapter_health_missing_config() -> None:
     assert "CHATWOOT_BASE_URL" in (health.message or "")
 
 
-def test_ticketing_health_endpoint(factory_settings: Settings) -> None:
+def test_ticketing_health_endpoint(factory_settings: Settings, monkeypatch: pytest.MonkeyPatch) -> None:
     get_settings.cache_clear()
     clear_ticketing_provider_cache()
+
+    transport = httpx.MockTransport(lambda _request: httpx.Response(200, json={}))
+
+    def _mock_client(settings: Settings) -> ChatwootAdapter:
+        return ChatwootAdapter(settings, client=ChatwootClient(settings, transport=transport))
+
+    monkeypatch.setattr(
+        "app.providers.ticketing.factory._REGISTRY",
+        {"chatwoot": _mock_client},
+    )
+    clear_ticketing_provider_cache()
+
     client = TestClient(create_app())
 
     token_response = client.post(

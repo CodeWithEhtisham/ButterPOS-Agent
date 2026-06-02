@@ -89,7 +89,35 @@ SQLAlchemy 2 async ORM lives under `app/db/`.
 
 **Pydantic vs ORM:** `app/models/standard.py` = API/ticketing contract (Chatwoot-agnostic). `app/db/models/` (Task 1.2.2+) = persisted Postgres tables.
 
-Alembic migrations: Task 1.2.6.
+Alembic migrations: Task 1.2.6 — revision `20260602_0001` (`alembic upgrade head`).
+
+---
+
+## Migrations (Task 1.2.6)
+
+| Item | Location |
+|------|----------|
+| Alembic config | `alembic.ini` |
+| Environment | `alembic/env.py` — loads `DATABASE_URL`, converts `+asyncpg` → `+psycopg2` |
+| Initial revision | `alembic/versions/20260602_0001_initial_schema.py` |
+| URL helper | `app/db/url.py` → `to_sync_database_url()` |
+
+**Apply locally:**
+
+```bash
+docker compose up -d
+alembic upgrade head
+alembic current   # should show 20260602_0001 (head)
+```
+
+**New migration (after ORM changes):**
+
+```bash
+alembic revision --autogenerate -m "describe change"
+alembic upgrade head
+```
+
+Runtime app uses `postgresql+asyncpg://`; Alembic uses sync `psycopg2` (both in `requirements.txt`).
 
 ---
 

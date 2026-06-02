@@ -50,6 +50,42 @@ User/password login against Postgres users arrives with Task 1.2+; until then, c
 
 ---
 
+## Chatwoot Application API auth
+
+**Task 1.3.1** — Agent API access via static token (not OAuth).
+
+### Model
+
+| Item | Detail |
+|------|--------|
+| Credential | `CHATWOOT_API_TOKEN` — Profile → Access Token in Chatwoot UI |
+| Header | `api_access_token: <token>` on every Application API request |
+| Scope | Agent-level token for the configured account/inbox |
+| Storage (V1) | `.env` via `pydantic-settings` — never logged or committed |
+| Redis override | **Deferred** — ops may later store rotated tokens in Redis; V1 reads env only |
+
+### Client
+
+Implementation: `app/providers/ticketing/chatwoot/client.py` (`ChatwootClient`).
+
+- Async `httpx` with configurable timeout (`CHATWOOT_REQUEST_TIMEOUT_SECONDS`, default 30s)
+- Retries on transient HTTP errors and status `408/429/5xx` (`CHATWOOT_MAX_RETRIES`, default 3)
+- `401` → `ChatwootAuthError` (invalid/expired token)
+- Health probe: `GET /api` (same as Step 0.1 spike)
+
+### Required env vars
+
+| Variable | Purpose |
+|----------|---------|
+| `CHATWOOT_BASE_URL` | Instance root, e.g. `http://localhost:3000` |
+| `CHATWOOT_API_TOKEN` | Application API token |
+| `CHATWOOT_ACCOUNT_ID` | Numeric account id |
+| `CHATWOOT_INBOX_ID` | API-channel inbox (used from sub-step 2+) |
+
+Verify: `GET /api/v1/system/ticketing-health` (JWT required) or adapter `health_check()`.
+
+---
+
 ## Webhook signatures
 
 <!-- Task 1.3 / 1.4: Chatwoot HMAC verification; signing secret = CHATWOOT_WEBHOOK_SECRET. -->

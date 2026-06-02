@@ -63,6 +63,7 @@ alembic/                  # Task 1.2+
 ```bash
 pip install -r requirements.txt -r requirements-dev.txt
 docker compose up -d
+alembic upgrade head
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
