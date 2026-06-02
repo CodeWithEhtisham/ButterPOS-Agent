@@ -99,6 +99,20 @@ class Settings(BaseSettings):
         description="Seconds between DLQ retry sweeps (Celery beat schedule)",
     )
 
+    # Webhook polling fallback (Task 1.4.4)
+    webhook_polling_interval_seconds: int = Field(
+        default=600,
+        description="Celery beat interval for platform polling reconciliation (10 min)",
+    )
+    webhook_polling_cursor_redis_key: str = Field(
+        default="webhook:polling:last_sync_at",
+        description="Redis key storing last successful poll unix timestamp",
+    )
+    webhook_polling_initial_lookback_seconds: int = Field(
+        default=900,
+        description="First poll lookback when no cursor exists (15 min)",
+    )
+
     @field_validator("log_level", mode="before")
     @classmethod
     def normalize_log_level(cls, value: object) -> str:

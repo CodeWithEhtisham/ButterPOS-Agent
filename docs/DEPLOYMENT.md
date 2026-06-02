@@ -115,9 +115,11 @@ CI uses GitHub Actions service containers — same images as local `docker-compo
 # Terminal 1 — task worker
 celery -A app.worker.celery_app worker -l info
 
-# Terminal 2 — DLQ retry beat (every WEBHOOK_DLQ_RETRY_INTERVAL_SECONDS)
+# Terminal 2 — beat (DLQ retry + ticket polling)
 celery -A app.worker.celery_app beat -l info
 ```
+
+Beat schedules: `webhook.retry_dlq` (5 min), `ticket.poll_reconcile` (10 min).
 
 Broker and DLQ both use `REDIS_URL`.
 

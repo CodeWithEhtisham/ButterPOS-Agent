@@ -12,7 +12,7 @@ celery_app = Celery(
     "butterpos_agent",
     broker=settings.redis_url,
     backend=settings.redis_url,
-    include=["app.worker.tasks.webhook_tasks"],
+    include=["app.worker.tasks.webhook_tasks", "app.worker.tasks.polling_tasks"],
 )
 
 celery_app.conf.update(
@@ -28,5 +28,9 @@ celery_app.conf.beat_schedule = {
     "retry-webhook-dlq": {
         "task": "webhook.retry_dlq",
         "schedule": float(settings.webhook_dlq_retry_interval_seconds),
+    },
+    "poll-ticket-reconcile": {
+        "task": "ticket.poll_reconcile",
+        "schedule": float(settings.webhook_polling_interval_seconds),
     },
 }

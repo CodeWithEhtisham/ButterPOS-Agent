@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import datetime
 from typing import Any
 
 from app.providers.ticketing.chatwoot.client import ChatwootClient
@@ -210,3 +211,58 @@ async def append_conversation_labels(
     merged = list(dict.fromkeys([*existing, *labels]))
     await add_conversation_labels(client, conversation_id, merged)
     return merged
+
+
+async def list_conversations_updated_since(
+    client: ChatwootClient,
+    since: datetime,
+) -> list[dict[str, Any]]:
+    """POST /conversations/filter — conversations updated after `since` in configured inbox."""
+    since_epoch = int(since.timestamp())
+    page = 1
+    conversations: list[dict[str, Any]] = []
+
+    while True:
+        response = await client.request(
+            "POST",
+            client.account_path("/conversations/filter"),
+            json={
+                "payload": [
+                    {
+                        "attribute_key": "updated_at",
+                        "filter_operator": "is_greater_than",
+                        "values": [since_epoch],
+                        "query_operator": "AND",
+                    },
+                    {
+                        "attribute_key": "inbox_id",
+                        "filter_operator": "equal_to",
+                        "values": [client.inbox_id],
+                        "query_operator": None,
+                    },
+                ],
+                "page": page,
+            },
+        )
+        body = response.json()
+        if not isinstance(body, dict):
+            break
+
+        data = body.get("data") if isinstance(body.get("data"), dict) else body
+        payload = data.get("payload") if isinstance(data, dict) else None
+        if not isinstance(payload, list):
+            payload = []
+
+        for item in payload:
+            if isinstance(item, dict):
+                conversations.append(unwrap_conversation(item))
+
+        meta = data.get("meta") if isinstance(data, dict) else {}
+        if not isinstance(meta, dict):
+            meta = {}
+        total_pages = int(meta.get("total_pages") or page)
+        if page >= total_pages or not payload:
+            break
+        page += 1
+
+    return conversations

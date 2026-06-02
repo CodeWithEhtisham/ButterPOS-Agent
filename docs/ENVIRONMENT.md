@@ -56,7 +56,9 @@ Configuration, credentials, and environment-specific settings.
 | `REDIS_URL` | Step 0.5+ | Redis URL, e.g. `redis://localhost:6379/0` |
 | `WEBHOOK_DLQ_REDIS_KEY` | Task 1.4.3 | DLQ sorted-set key (default `webhook:dlq:pending`) |
 | `WEBHOOK_DLQ_MAX_ATTEMPTS` | Task 1.4.3 | Total processing tries before exhaustion alert (default `3`) |
-| `WEBHOOK_DLQ_RETRY_INTERVAL_SECONDS` | Task 1.4.3 | Beat interval + retry delay (default `300`) |
+| `WEBHOOK_POLLING_INTERVAL_SECONDS` | Task 1.4.4 | Beat interval for ticket reconciliation (default `600`) |
+| `WEBHOOK_POLLING_CURSOR_REDIS_KEY` | Task 1.4.4 | Redis key for last poll timestamp |
+| `WEBHOOK_POLLING_INITIAL_LOOKBACK_SECONDS` | Task 1.4.4 | First-run lookback when cursor absent (default `900`) |
 
 ### Application (Phase 1 — Task 1.1)
 
@@ -91,6 +93,14 @@ Requires `REDIS_URL` for production reversible masking.
 | `WEBHOOK_DLQ_RETRY_INTERVAL_SECONDS` | Optional | Celery beat / retry delay in seconds (default `300`) |
 
 Requires `REDIS_URL` for Celery broker and DLQ. Run worker + beat per `DEPLOYMENT.md`.
+
+### Webhook polling fallback (Task 1.4.4)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `WEBHOOK_POLLING_INTERVAL_SECONDS` | Optional | Platform poll beat interval (default `600`) |
+| `WEBHOOK_POLLING_CURSOR_REDIS_KEY` | Optional | Last poll cursor in Redis |
+| `WEBHOOK_POLLING_INITIAL_LOOKBACK_SECONDS` | Optional | Initial lookback without cursor (default `900`) |
 
 ## Credential locations
 

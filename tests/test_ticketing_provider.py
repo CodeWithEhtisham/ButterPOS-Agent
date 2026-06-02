@@ -19,6 +19,7 @@ REQUIRED_METHODS = frozenset(
         "verify_webhook",
         "parse_webhook",
         "health_check",
+        "list_tickets_updated_since",
     }
 )
 

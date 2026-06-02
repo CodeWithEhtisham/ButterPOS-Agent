@@ -125,6 +125,16 @@ Event processing and DLQ: Task 1.4 sub-steps 3+.
 | DLQ store | `app/worker/dlq.py` |
 | Celery tasks | `app/worker/tasks/webhook_tasks.py` |
 
+#### Polling fallback (Task 1.4.4)
+
+| Component | Path |
+|-----------|------|
+| Provider method | `TicketingProvider.list_tickets_updated_since()` |
+| Chatwoot API | `POST /conversations/filter` (inbox + updated_at) |
+| Reconciliation | `app/services/ticket_polling_service.py` |
+| Postgres mirror | `app/repositories/ticket_cache_repository.py` |
+| Beat task | `ticket.poll_reconcile` in `app/worker/tasks/polling_tasks.py` |
+
 ---
 
 ## Request/response schemas

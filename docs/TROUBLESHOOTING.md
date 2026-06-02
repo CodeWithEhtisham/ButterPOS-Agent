@@ -57,3 +57,4 @@ Creating a conversation via Application API requires a `source_id` (unique per c
 | Webhook stuck in `failed` | Celery worker/beat not running | Start `celery worker` + `celery beat`; check Redis DLQ key |
 | `webhook_dlq_exhausted` in logs | Event failed 3 processing attempts | Inspect `webhook_event_log.error_message`; fix root cause; manual replay TBD |
 | Celery dispatch failed on ingest | Redis broker down at POST time | Event pushed to DLQ directly; start Redis + beat |
+| `ticket_cache` stale vs Chatwoot | Webhook missed; polling not running | Ensure Celery beat + worker running; check poll cursor key in Redis |

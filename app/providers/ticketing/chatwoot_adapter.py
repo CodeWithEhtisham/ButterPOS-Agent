@@ -5,6 +5,8 @@ Platform-specific Chatwoot API calls live here only.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from app.core.config import Settings
 from app.models.standard import (
     AddCommentRequest,
@@ -30,6 +32,7 @@ from app.providers.ticketing.chatwoot.conversations import (
     build_source_id,
     create_conversation,
     get_conversation,
+    list_conversations_updated_since,
     parse_assignee_id,
     parse_contact_id,
     parse_conversation_id,
@@ -224,6 +227,11 @@ class ChatwootAdapter(TicketingProvider):
             callback_url,
             subscriptions=subscriptions,
         )
+
+    async def list_tickets_updated_since(self, since: datetime) -> list[StandardTicket]:
+        """Filter Chatwoot conversations updated after `since` for configured inbox."""
+        raw_items = await list_conversations_updated_since(self._client, since)
+        return [conversation_to_standard_ticket(item) for item in raw_items]
 
     async def health_check(self) -> ProviderHealth:
         """Validate config and probe Chatwoot Application API (`GET /api`)."""

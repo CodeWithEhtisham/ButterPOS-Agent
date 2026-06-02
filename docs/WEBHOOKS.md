@@ -179,8 +179,14 @@ Requires `REDIS_URL` (broker + DLQ).
 
 ## Polling fallback
 
-<!-- TBD Phase 1: Celery beat task. -->
+**Task 1.4.4** — Celery beat reconciles Chatwoot ↔ Postgres `ticket_cache` when webhooks are dropped.
 
-- Query Chatwoot every 10 min for conversations updated since last sync
-- Reconcile with local ticket cache
-- Defense in depth when webhooks are dropped
+| Item | Detail |
+|------|--------|
+| Beat task | `ticket.poll_reconcile` every `WEBHOOK_POLLING_INTERVAL_SECONDS` (default `600` = 10 min) |
+| Cursor | Redis key `WEBHOOK_POLLING_CURSOR_REDIS_KEY` — last successful poll timestamp |
+| First run | Looks back `WEBHOOK_POLLING_INITIAL_LOOKBACK_SECONDS` (default `900` = 15 min) if no cursor |
+| Platform API | `TicketingProvider.list_tickets_updated_since()` → Chatwoot `POST /conversations/filter` |
+| Local mirror | Upsert into `ticket_cache` — create, update, or touch `synced_at` |
+
+Defense in depth alongside webhooks + DLQ: missed webhook events are eventually reflected in the durable mirror within one poll interval.

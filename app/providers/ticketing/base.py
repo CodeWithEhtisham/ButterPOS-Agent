@@ -1,4 +1,4 @@
-"""TicketingProvider abstract interface — 11 methods (Task 1.1.4).
+"""TicketingProvider abstract interface — 12 methods (Task 1.1.4 + 1.4.4).
 
 All platform-specific logic lives in adapters (e.g. ChatwootAdapter in Task 1.3).
 The middleware core imports this module only, never a platform SDK.
@@ -7,6 +7,7 @@ The middleware core imports this module only, never a platform SDK.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from app.models.standard import (
     AddCommentRequest,
@@ -71,3 +72,7 @@ class TicketingProvider(ABC):
     @abstractmethod
     async def health_check(self) -> ProviderHealth:
         """Probe platform API reachability and credentials."""
+
+    @abstractmethod
+    async def list_tickets_updated_since(self, since: datetime) -> list[StandardTicket]:
+        """List tickets/conversations updated after `since` — polling fallback (Task 1.4.4)."""

@@ -42,7 +42,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | **1.1** | FastAPI + `TicketingProvider` interface | **Complete** (2026-06-02) |
 | **1.2** | PostgreSQL schema + migrations | **Complete** (2026-06-02) |
 | **1.3** | `ChatwootAdapter` | **Complete** (2026-06-02) |
-| **1.4** | Webhook receiver + `StandardEvent` parser | **In progress** |
+| **1.4** | Webhook receiver + `StandardEvent` parser | **Complete** (2026-06-02) |
 | **1.5** | Redis cache + rate limiting | Not started |
 | **1.6** | Customer/Branch mapping + unit tests (100% coverage) | Not started |
 | **1.7** | Data seeding + validation | Not started |
@@ -54,7 +54,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 1 | POST endpoint — verify → parse → `StandardEvent` | **Complete** (2026-06-02) |
 | 2 | Idempotency + payload hashing | **Complete** (2026-06-02) |
 | 3 | Dead Letter Queue (Redis + Celery) | **Complete** (2026-06-02) |
-| 4 | Polling fallback (Celery beat) | Not started |
+| 4 | Polling fallback (Celery beat) | **Complete** (2026-06-02) |
 
 ### Task 1.2 sub-steps
 
@@ -96,7 +96,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 
 - [ ] Middleware runs
 - [ ] `ChatwootAdapter` passes against local Chatwoot
-- [ ] Webhooks ingest idempotently with DLQ + polling
+- [x] Webhooks ingest idempotently with DLQ + polling
 - [ ] Caching + rate limits live
 - [ ] Mapping at 100% coverage
 - [ ] Data seeded and jointly validated
