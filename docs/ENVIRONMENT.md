@@ -94,6 +94,15 @@ Requires `REDIS_URL` for production reversible masking.
 
 Requires `REDIS_URL` for Celery broker and DLQ. Run worker + beat per `DEPLOYMENT.md`.
 
+### Ticketing read cache (Task 1.5.1)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `TICKET_READ_CACHE_TTL_SECONDS` | Optional | Cached `get_ticket` TTL (default `60`) |
+| `CONTACT_READ_CACHE_TTL_SECONDS` | Optional | Cached contact lookup TTL (default `86400`) |
+| `TICKET_READ_CACHE_REDIS_PREFIX` | Optional | Redis key prefix for tickets |
+| `CONTACT_READ_CACHE_REDIS_PREFIX` | Optional | Redis key prefix for contacts |
+
 ### Webhook polling fallback (Task 1.4.4)
 
 | Variable | Required | Description |
@@ -101,6 +110,10 @@ Requires `REDIS_URL` for Celery broker and DLQ. Run worker + beat per `DEPLOYMEN
 | `WEBHOOK_POLLING_INTERVAL_SECONDS` | Optional | Platform poll beat interval (default `600`) |
 | `WEBHOOK_POLLING_CURSOR_REDIS_KEY` | Optional | Last poll cursor in Redis |
 | `WEBHOOK_POLLING_INITIAL_LOOKBACK_SECONDS` | Optional | Initial lookback without cursor (default `900`) |
+| `TICKET_READ_CACHE_TTL_SECONDS` | Optional | Redis TTL for cached ticket reads (default `60`) |
+| `CONTACT_READ_CACHE_TTL_SECONDS` | Optional | Redis TTL for cached contact reads (default `86400`) |
+| `TICKET_READ_CACHE_REDIS_PREFIX` | Optional | Ticket cache key prefix (default `cache:ticket:`) |
+| `CONTACT_READ_CACHE_REDIS_PREFIX` | Optional | Contact cache key prefix (default `cache:contact:`) |
 
 ## Credential locations
 

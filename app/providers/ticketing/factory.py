@@ -6,7 +6,9 @@ from collections.abc import Callable
 from functools import lru_cache
 
 from app.core.config import Settings, get_settings
+from app.core.cache.ticketing_read_cache import TicketingReadCache, build_ticketing_read_cache
 from app.providers.ticketing.base import TicketingProvider
+from app.providers.ticketing.caching_adapter import CachingTicketingProvider
 from app.providers.ticketing.chatwoot_adapter import ChatwootAdapter
 
 ProviderBuilder = Callable[[Settings], TicketingProvider]
@@ -20,8 +22,12 @@ class UnknownTicketingProviderError(ValueError):
     """Raised when TICKETING_PROVIDER is not registered."""
 
 
-def create_ticketing_provider(settings: Settings) -> TicketingProvider:
-    """Instantiate the configured ticketing adapter."""
+def create_ticketing_provider(
+    settings: Settings,
+    *,
+    read_cache: TicketingReadCache | None = None,
+) -> TicketingProvider:
+    """Instantiate the configured ticketing adapter with read-through Redis cache."""
     name = settings.ticketing_provider
     builder = _REGISTRY.get(name)
     if builder is None:
@@ -29,7 +35,9 @@ def create_ticketing_provider(settings: Settings) -> TicketingProvider:
         raise UnknownTicketingProviderError(
             f"Unknown ticketing provider {name!r}. Supported: {supported}"
         )
-    return builder(settings)
+    inner = builder(settings)
+    cache = read_cache or build_ticketing_read_cache(settings)
+    return CachingTicketingProvider(inner, cache)
 
 
 @lru_cache

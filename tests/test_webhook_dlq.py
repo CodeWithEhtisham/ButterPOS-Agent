@@ -64,7 +64,19 @@ def test_process_webhook_event_rejects_unknown_type() -> None:
 
 def test_process_webhook_event_accepts_message_created() -> None:
     async def _run() -> None:
-        await process_webhook_event(_event())
+        from app.core.cache.json_blob_cache import InMemoryJsonBlobCache
+        from app.core.cache.ticketing_read_cache import build_ticketing_read_cache
+
+        read_cache = build_ticketing_read_cache(
+            Settings(_env_file=None),
+            blob_cache=InMemoryJsonBlobCache(),
+        )
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(
+                "app.services.webhook_processor.get_ticketing_read_cache",
+                lambda: read_cache,
+            )
+            await process_webhook_event(_event())
 
     asyncio.run(_run())
 

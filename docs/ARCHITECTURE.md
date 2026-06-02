@@ -72,7 +72,17 @@ Abstract interface in `app/providers/ticketing/base.py` — **11 async methods**
 
 ## Caching strategy
 
-- **Ticket/contact cache** — Task 1.5 (60s / 24h TTL).
+**Task 1.5.1** — Redis read-through cache on `TicketingProvider` reads.
+
+| Cache | TTL | Keys | Invalidation |
+|-------|-----|------|--------------|
+| Ticket (`StandardTicket`) | 60s | `cache:ticket:{provider_ticket_id}` | Webhook for conversation; `add_comment` / `add_note`; overwritten on status/assign/tags writes |
+| Contact (`StandardContact`) | 24h | `cache:contact:lookup:{uid\|email\|phone}` + `cache:contact:pid:{id}` | Webhook when sender is contact; refreshed on cache miss |
+
+Implementation: `CachingTicketingProvider` wraps the configured adapter in `app/providers/ticketing/factory.py`. Module: `app/core/cache/ticketing_read_cache.py`.
+
+Postgres `ticket_cache` table (Task 1.2) is the **durable mirror** for polling; Redis is the **hot read cache** for platform API calls.
+
 - **PII token map** — Task 1.1.7: Redis `pii:token:{id}` → original value, **24h TTL**. Used to unmask LLM responses. Invalid/expired tokens remain as placeholders in text.
 
 ---

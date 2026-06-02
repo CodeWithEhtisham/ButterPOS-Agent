@@ -43,9 +43,17 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | **1.2** | PostgreSQL schema + migrations | **Complete** (2026-06-02) |
 | **1.3** | `ChatwootAdapter` | **Complete** (2026-06-02) |
 | **1.4** | Webhook receiver + `StandardEvent` parser | **Complete** (2026-06-02) |
-| **1.5** | Redis cache + rate limiting | Not started |
+| **1.5** | Redis cache + rate limiting | **In progress** |
 | **1.6** | Customer/Branch mapping + unit tests (100% coverage) | Not started |
 | **1.7** | Data seeding + validation | Not started |
+
+### Task 1.5 sub-steps
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Ticket cache (60s) + contact cache (24h) + webhook invalidation | **Complete** (2026-06-02) |
+| 2 | Per-user + per-restaurant rate limits | Not started |
+| 3 | Request dedup + PII token mapping | Not started |
 
 ### Task 1.4 sub-steps
 

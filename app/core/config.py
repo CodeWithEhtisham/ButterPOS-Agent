@@ -113,6 +113,24 @@ class Settings(BaseSettings):
         description="First poll lookback when no cursor exists (15 min)",
     )
 
+    # Ticketing read cache (Task 1.5.1)
+    ticket_read_cache_ttl_seconds: int = Field(
+        default=60,
+        description="Redis TTL for cached StandardTicket reads",
+    )
+    contact_read_cache_ttl_seconds: int = Field(
+        default=86400,
+        description="Redis TTL for cached StandardContact reads (24h)",
+    )
+    ticket_read_cache_redis_prefix: str = Field(
+        default="cache:ticket:",
+        description="Redis key prefix for ticket read cache",
+    )
+    contact_read_cache_redis_prefix: str = Field(
+        default="cache:contact:",
+        description="Redis key prefix for contact read cache",
+    )
+
     @field_validator("log_level", mode="before")
     @classmethod
     def normalize_log_level(cls, value: object) -> str:

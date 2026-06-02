@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.core.cache.ticketing_read_cache import get_ticketing_read_cache
 from app.core.exceptions import WebhookProcessingError
 from app.core.logging_config import get_logger
 from app.models.standard import StandardEvent, StandardEventType
@@ -12,11 +13,16 @@ logger = get_logger("app.webhooks")
 async def process_webhook_event(event: StandardEvent) -> None:
     """Handle a normalized webhook event after idempotency gate.
 
-    V1 validates known event types only. Cache invalidation and agent loop
-    enqueue arrive in Task 1.5 / Phase 2.
+    V1 validates known event types and invalidates Redis read caches so the
+    next get_ticket / get_or_create_contact fetches fresh platform data.
     """
     if event.event_type is StandardEventType.UNKNOWN:
         raise WebhookProcessingError(f"Unsupported webhook event type: {event.event_type.value}")
+
+    await get_ticketing_read_cache().invalidate_for_webhook(
+        provider_ticket_id=event.provider_ticket_id,
+        sender_provider_contact_id=event.sender_provider_contact_id,
+    )
 
     logger.info(
         "webhook_processed event_type=%s provider_event_id=%s ticket_id=%s",

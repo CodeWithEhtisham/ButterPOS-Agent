@@ -301,6 +301,26 @@ Update this ADR with scorecard numbers from `results/eval_report_*.json`.
 
 ---
 
+## D-12 — Ticketing read cache as provider decorator
+
+**Status:** Locked (2026-06-02)
+
+### Context
+
+Task 1.5 requires Redis-backed caching for `get_ticket` and `get_or_create_contact` without breaking provider isolation.
+
+### Decision
+
+Wrap the configured `TicketingProvider` in `CachingTicketingProvider` at factory time. Redis stores serialized `StandardTicket` / `StandardContact` JSON with TTLs 60s / 24h. Webhook processing invalidates affected keys; write paths refresh or invalidate.
+
+### Consequences
+
+- Core never imports Redis directly in ChatwootAdapter.
+- Swapping ticketing platform keeps cache logic unchanged.
+- Postgres `ticket_cache` remains the durable mirror (polling); Redis is hot read path only.
+
+---
+
 ## D-10 — KB MVP list gates Phase 2
 
 **Status:** Resolved (2026-06-01) — tooling ready; production audit pending WhatsApp export

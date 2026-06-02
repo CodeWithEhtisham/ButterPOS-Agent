@@ -9,7 +9,10 @@ import pytest
 from app.core.config import Settings, get_settings
 from app.main import create_app
 from app.providers.ticketing.chatwoot.client import ChatwootClient
+from app.providers.ticketing.caching_adapter import CachingTicketingProvider
 from app.providers.ticketing.chatwoot_adapter import ChatwootAdapter
+from app.core.cache.json_blob_cache import InMemoryJsonBlobCache
+from app.core.cache.ticketing_read_cache import build_ticketing_read_cache
 from app.providers.ticketing.factory import (
     UnknownTicketingProviderError,
     clear_ticketing_provider_cache,
@@ -38,8 +41,11 @@ def factory_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
 
 
 def test_factory_returns_chatwoot_adapter(factory_settings: Settings) -> None:
-    provider = create_ticketing_provider(factory_settings)
-    assert isinstance(provider, ChatwootAdapter)
+    blob = InMemoryJsonBlobCache()
+    read_cache = build_ticketing_read_cache(factory_settings, blob_cache=blob)
+    provider = create_ticketing_provider(factory_settings, read_cache=read_cache)
+    assert isinstance(provider, CachingTicketingProvider)
+    assert isinstance(provider.inner, ChatwootAdapter)
     assert provider.provider_name == "chatwoot"
 
 
@@ -86,12 +92,14 @@ def test_ticketing_health_endpoint(factory_settings: Settings, monkeypatch: pyte
 
     transport = httpx.MockTransport(lambda _request: httpx.Response(200, json={}))
 
-    def _mock_client(settings: Settings) -> ChatwootAdapter:
-        return ChatwootAdapter(settings, client=ChatwootClient(settings, transport=transport))
+    def _mock_client(settings: Settings) -> TicketingProvider:
+        inner = ChatwootAdapter(settings, client=ChatwootClient(settings, transport=transport))
+        read_cache = build_ticketing_read_cache(settings, blob_cache=InMemoryJsonBlobCache())
+        return CachingTicketingProvider(inner, read_cache)
 
     monkeypatch.setattr(
         "app.providers.ticketing.factory._REGISTRY",
-        {"chatwoot": _mock_client},
+        {"chatwoot": lambda settings: _mock_client(settings)},
     )
     clear_ticketing_provider_cache()
 

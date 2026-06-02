@@ -1,6 +1,7 @@
 """Ticketing provider adapters."""
 
 from app.providers.ticketing.base import TicketingProvider
+from app.providers.ticketing.caching_adapter import CachingTicketingProvider
 from app.providers.ticketing.chatwoot_adapter import ChatwootAdapter
 from app.providers.ticketing.factory import (
     UnknownTicketingProviderError,
