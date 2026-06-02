@@ -174,4 +174,14 @@ Requires at least one of: `external_user_id`, `email`, or `phone`. Requires `CHA
 
 Implementation: `app/providers/ticketing/chatwoot/contacts.py`.
 
+### `verify_webhook()` / `parse_webhook()` / `register_webhook()` (Task 1.3.7)
+
+| Method | Purpose |
+|--------|---------|
+| `verify_webhook(raw_body, headers)` | HMAC + timestamp validation |
+| `parse_webhook(raw_body, headers)` | Event-specific JSON → `StandardEvent` + `idempotency_key` |
+| `register_webhook(url)` | `POST /webhooks` on Chatwoot (adapter helper — not on `TicketingProvider` ABC) |
+
+`parse_webhook` branches on `event` field (`message_*` vs `conversation_*` payload shapes). Unknown events map to `StandardEventType.UNKNOWN`.
+
 ---

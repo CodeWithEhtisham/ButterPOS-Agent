@@ -92,11 +92,33 @@ Alternative: redirect tablet to Chatwoot-hosted survey at `/survey/responses/{co
 
 ## HMAC verification
 
-<!-- TBD Phase 1: ChatwootAdapter.verify_webhook() implementation. -->
+Implemented in `app/providers/ticketing/chatwoot/webhooks.py` → `ChatwootAdapter.verify_webhook()`.
 
-- Header: `X-Chatwoot-Signature` (HMAC-SHA256 of raw body)
-- Secret: `CHATWOOT_WEBHOOK_SECRET` env var (set when registering webhook in Chatwoot)
-- Reject with `401` if signature invalid; log and do not process
+| Item | Detail |
+|------|--------|
+| Headers | `X-Chatwoot-Signature`, `X-Chatwoot-Timestamp` |
+| Algorithm | `sha256=HMAC-SHA256(secret, "{timestamp}.{raw_body}")` |
+| Secret | `CHATWOOT_WEBHOOK_SECRET` — returned once when webhook is registered |
+| Replay window | `CHATWOOT_WEBHOOK_MAX_AGE_SECONDS` (default `300`) |
+| Comparison | `hmac.compare_digest` (constant-time) |
+
+**Important:** Verify against the **raw request body bytes** — do not re-serialize JSON.
+
+Reject with `401` if signature invalid or timestamp too old; log and do not process.
+
+### Webhook registration (Task 1.3.7)
+
+Register via Chatwoot UI (Settings → Integrations → Webhooks) **or** adapter helper:
+
+```python
+adapter = ChatwootAdapter(settings)
+result = await adapter.register_webhook("https://your-host/api/v1/webhooks/chatwoot")
+# Save result["secret"] → CHATWOOT_WEBHOOK_SECRET in .env
+```
+
+API: `POST /api/v1/accounts/{account_id}/webhooks` with V1 subscriptions (`message_created`, `conversation_status_changed`, etc.).
+
+Local dev may require HTTPS or ngrok — Chatwoot rejects plain HTTP URLs in production mode.
 
 ---
 

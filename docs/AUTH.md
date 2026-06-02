@@ -88,7 +88,19 @@ Verify: `GET /api/v1/system/ticketing-health` (JWT required) or adapter `health_
 
 ## Webhook signatures
 
-<!-- Task 1.3 / 1.4: Chatwoot HMAC verification; signing secret = CHATWOOT_WEBHOOK_SECRET. -->
+**Task 1.3.7** — Chatwoot account webhooks signed with per-webhook secret.
+
+| Item | Detail |
+|------|--------|
+| Verification | `ChatwootAdapter.verify_webhook(raw_body, headers)` |
+| Secret env | `CHATWOOT_WEBHOOK_SECRET` — from webhook registration response |
+| Max age | `CHATWOOT_WEBHOOK_MAX_AGE_SECONDS` (default 300) |
+| Signature | `sha256=HMAC-SHA256(secret, "{timestamp}.{raw_body}")` |
+| Headers | `X-Chatwoot-Signature`, `X-Chatwoot-Timestamp` |
+
+Registration: `ChatwootAdapter.register_webhook(callback_url)` → save returned `secret` to `.env`. See `WEBHOOKS.md`.
+
+Task 1.4 wires verification into `POST /api/v1/webhooks/chatwoot`.
 
 ---
 

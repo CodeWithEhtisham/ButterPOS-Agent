@@ -53,6 +53,10 @@ class Settings(BaseSettings):
         default=3,
         description="Retry count for transient Chatwoot HTTP failures",
     )
+    chatwoot_webhook_max_age_seconds: int = Field(
+        default=300,
+        description="Reject Chatwoot webhooks older than this many seconds (replay protection)",
+    )
 
     # LLM via OpenRouter (D-11)
     openrouter_api_key: str = ""

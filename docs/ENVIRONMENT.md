@@ -15,6 +15,7 @@ Configuration, credentials, and environment-specific settings.
 | `CHATWOOT_ACCOUNT_ID` | Step 0.1+ | Numeric account ID |
 | `CHATWOOT_INBOX_ID` | Step 0.1+ | API-channel inbox ID |
 | `CHATWOOT_WEBHOOK_SECRET` | Phase 1 | HMAC secret for inbound webhook verification |
+| `CHATWOOT_WEBHOOK_MAX_AGE_SECONDS` | Optional | Replay window for webhook timestamps (default `300`) |
 | `CHATWOOT_REQUEST_TIMEOUT_SECONDS` | Optional | HTTP timeout for Chatwoot API (default `30`) |
 | `CHATWOOT_MAX_RETRIES` | Optional | Retries on transient Chatwoot failures (default `3`) |
 

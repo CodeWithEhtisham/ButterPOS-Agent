@@ -45,7 +45,11 @@ from app.providers.ticketing.chatwoot.mappers import (
     unwrap_conversation,
 )
 
-_TASK_1_3_REMAINING = "Not implemented — completed in later Task 1.3 sub-steps"
+from app.providers.ticketing.chatwoot.webhooks import (
+    parse_chatwoot_webhook,
+    register_account_webhook,
+    verify_chatwoot_webhook,
+)
 
 
 class ChatwootAdapter(TicketingProvider):
@@ -195,10 +199,31 @@ class ChatwootAdapter(TicketingProvider):
         return await chatwoot_get_or_create_contact(self._client, request)
 
     async def verify_webhook(self, raw_body: bytes, headers: dict[str, str]) -> bool:
-        raise NotImplementedError(_TASK_1_3_REMAINING)
+        """Validate Chatwoot HMAC signature (X-Chatwoot-Signature + Timestamp)."""
+        return verify_chatwoot_webhook(
+            raw_body,
+            headers,
+            self._settings.chatwoot_webhook_secret,
+            max_age_seconds=self._settings.chatwoot_webhook_max_age_seconds,
+        )
 
     async def parse_webhook(self, raw_body: bytes, headers: dict[str, str]) -> StandardEvent:
-        raise NotImplementedError(_TASK_1_3_REMAINING)
+        """Map Chatwoot webhook JSON to StandardEvent (event-specific parsers)."""
+        _ = headers  # reserved for delivery-id logging in Task 1.4
+        return parse_chatwoot_webhook(raw_body)
+
+    async def register_webhook(
+        self,
+        callback_url: str,
+        *,
+        subscriptions: list[str] | None = None,
+    ) -> dict:
+        """Register account webhook in Chatwoot — save returned secret to CHATWOOT_WEBHOOK_SECRET."""
+        return await register_account_webhook(
+            self._client,
+            callback_url,
+            subscriptions=subscriptions,
+        )
 
     async def health_check(self) -> ProviderHealth:
         """Validate config and probe Chatwoot Application API (`GET /api`)."""

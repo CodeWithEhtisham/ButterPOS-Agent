@@ -41,6 +41,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 |------|-------------|--------|
 | **1.1** | FastAPI + `TicketingProvider` interface | **Complete** (2026-06-02) |
 | **1.2** | PostgreSQL schema + migrations | **Complete** (2026-06-02) |
+| **1.3** | `ChatwootAdapter` | **Complete** (2026-06-02) |
 
 ### Task 1.2 sub-steps
 
@@ -52,7 +53,6 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 4 | KB article + version history | **Complete** (2026-06-02) |
 | 5 | Webhook event log + SLA config | **Complete** (2026-06-02) |
 | 6 | Alembic init + first migration | **Complete** (2026-06-02) |
-| 1.3 | `ChatwootAdapter` | **In progress** |
 
 ### Task 1.3 sub-steps
 
@@ -64,7 +64,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 4 | `add_comment()` + `add_note()` | **Complete** (2026-06-02) |
 | 5 | `assign_agent()` + `add_tags()` | **Complete** (2026-06-02) |
 | 6 | `get_or_create_contact()` | **Complete** (2026-06-02) |
-| 7 | Webhook HMAC verification + registration | Not started |
+| 7 | Webhook HMAC verification + registration | **Complete** (2026-06-02) |
 | 1.4 | Webhook receiver + `StandardEvent` parser | Not started |
 | 1.5 | Redis cache + rate limiting | Not started |
 | 1.6 | Customer/Branch mapping + unit tests (100% coverage) | Not started |
