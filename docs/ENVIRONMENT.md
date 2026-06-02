@@ -52,7 +52,20 @@ Configuration, credentials, and environment-specific settings.
 | `REDIS_PORT` | Step 0.5 | Host port mapping (default: `6379`) |
 | `REDIS_URL` | Step 0.5+ | Redis URL, e.g. `redis://localhost:6379/0` |
 
-<!-- Phase 1 TBD: JWT_SECRET, TICKETING_PROVIDER, CELERY_BROKER_URL, etc. -->
+### Application (Phase 1 — Task 1.1)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `APP_NAME` | Optional | Display name (default: `ButterPOS Support Agent`) |
+| `DEBUG` | Optional | FastAPI debug mode (default: `false`) |
+| `LOG_LEVEL` | Optional | `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` |
+| `TICKETING_PROVIDER` | Phase 1 | Adapter to load (default: `chatwoot`) |
+| `JWT_SECRET` | Task 1.1.2+ | HS256 signing secret for API tokens |
+| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | Optional | Token TTL (default: `60`) |
+| `API_CLIENT_ID` | Task 1.1.2+ | Client id for token exchange (default: `butterpos-widget`) |
+| `API_CLIENT_SECRET` | Task 1.1.2+ | Client secret for token exchange |
+
+Settings class: `app/core/config.py` — loaded via `get_settings()`.
 
 ---
 
@@ -62,7 +75,8 @@ Configuration, credentials, and environment-specific settings.
 |------------|------------|-----------------|---------|
 | Chatwoot API token | A4 | Chatwoot UI → Profile → Access Token | `.env` |
 | Chatwoot account/inbox IDs | A4 | Chatwoot dashboard / Settings → Inboxes | `.env` |
-| OpenRouter API key | — | [openrouter.ai/keys](https://openrouter.ai/keys) | `.env` → `OPENROUTER_API_KEY` |
+| JWT signing secret | Task 1.1.2 | Generate locally (`openssl rand -hex 32`) | `.env` → `JWT_SECRET` |
+| API client credentials | Task 1.1.2 | Team Lead / deploy setup | `.env` → `API_CLIENT_ID`, `API_CLIENT_SECRET` |
 | Android repo access | A1 | ButterPOS mobile team — git URL or clone path | `.env` → `BUTTERPOS_ANDROID_REPO` |
 | DB read access | A2 | ButterPOS backend team — read-only Postgres user | `.env` → `DATABASE_URL` |
 | Data export file | A2 | ButterPOS backend team — CSV/JSON export | `.env` → `BUTTERPOS_DATA_EXPORT` |
