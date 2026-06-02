@@ -24,9 +24,12 @@ from app.providers.ticketing.chatwoot.auth import missing_config_fields
 from app.providers.ticketing.chatwoot.client import ChatwootClient
 from app.providers.ticketing.chatwoot.conversations import (
     add_conversation_labels,
+    append_conversation_labels,
+    assign_conversation_agent,
     build_source_id,
     create_conversation,
     get_conversation,
+    parse_assignee_id,
     parse_contact_id,
     parse_conversation_id,
     send_conversation_message,
@@ -164,10 +167,25 @@ class ChatwootAdapter(TicketingProvider):
         )
 
     async def assign_agent(self, request: AssignAgentRequest) -> StandardTicket:
-        raise NotImplementedError(_TASK_1_3_REMAINING)
+        """Assign conversation to a Chatwoot agent user."""
+        conversation_id = parse_conversation_id(request.provider_ticket_id)
+        assignee_id = parse_assignee_id(request.assignee_id)
+        await assign_conversation_agent(self._client, conversation_id, assignee_id)
+        raw = await get_conversation(self._client, conversation_id)
+        return conversation_to_standard_ticket(raw)
 
     async def add_tags(self, request: AddTagsRequest) -> StandardTicket:
-        raise NotImplementedError(_TASK_1_3_REMAINING)
+        """Append classification labels to a conversation."""
+        conversation_id = parse_conversation_id(request.provider_ticket_id)
+        merged_tags = await append_conversation_labels(
+            self._client,
+            conversation_id,
+            request.tags,
+        )
+        raw = await get_conversation(self._client, conversation_id)
+        ticket = conversation_to_standard_ticket(raw)
+        ticket.tags = merged_tags
+        return ticket
 
     async def get_or_create_contact(self, request: CreateContactRequest) -> StandardContact:
         raise NotImplementedError(_TASK_1_3_REMAINING)

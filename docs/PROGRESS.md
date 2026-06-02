@@ -62,7 +62,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 2 | `create_ticket()` | **Complete** (2026-06-02) |
 | 3 | `get_ticket()` + `update_status()` + status mapping | **Complete** (2026-06-02) |
 | 4 | `add_comment()` + `add_note()` | **Complete** (2026-06-02) |
-| 5 | `assign_agent()` + `add_tags()` | Not started |
+| 5 | `assign_agent()` + `add_tags()` | **Complete** (2026-06-02) |
 | 6 | `get_or_create_contact()` | Not started |
 | 7 | Webhook HMAC verification + registration | Not started |
 | 1.4 | Webhook receiver + `StandardEvent` parser | Not started |

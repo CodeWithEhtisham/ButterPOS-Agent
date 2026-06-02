@@ -144,4 +144,13 @@ Optional rich UI on public comments via `AddCommentRequest.metadata`:
 
 Notes always use plain `text`; no rich attributes.
 
+### `assign_agent()` / `add_tags()` (Task 1.3.5)
+
+| Method | Chatwoot API | Returns |
+|--------|--------------|---------|
+| `assign_agent(req)` | `POST /conversations/{id}/assignments` with `assignee_id` | Fresh `StandardTicket` |
+| `add_tags(req)` | `GET` existing labels → merge → `POST .../labels` | `StandardTicket` with merged tags |
+
+`assignee_id` and `provider_ticket_id` must be numeric Chatwoot ids (strings in standard model).
+
 ---

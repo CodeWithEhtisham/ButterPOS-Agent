@@ -41,6 +41,16 @@ def parse_conversation_id(provider_ticket_id: str) -> int:
         ) from exc
 
 
+def parse_assignee_id(assignee_id: str) -> int:
+    try:
+        return int(assignee_id)
+    except ValueError as exc:
+        raise ChatwootAPIError(
+            f"Invalid assignee_id: {assignee_id!r}",
+            status_code=400,
+        ) from exc
+
+
 async def get_conversation(client: ChatwootClient, conversation_id: int) -> dict[str, Any]:
     """GET /conversations/{id}."""
     response = await client.request(
@@ -168,3 +178,35 @@ async def add_conversation_labels(
         client.account_path(f"/conversations/{conversation_id}/labels"),
         json={"labels": labels},
     )
+
+
+async def assign_conversation_agent(
+    client: ChatwootClient,
+    conversation_id: int,
+    assignee_id: int,
+) -> None:
+    """POST /conversations/{id}/assignments."""
+    await client.request(
+        "POST",
+        client.account_path(f"/conversations/{conversation_id}/assignments"),
+        json={"assignee_id": assignee_id},
+    )
+    logger.info(
+        "Chatwoot conversation assigned",
+        extra={"conversation_id": conversation_id, "assignee_id": assignee_id},
+    )
+
+
+async def append_conversation_labels(
+    client: ChatwootClient,
+    conversation_id: int,
+    labels: list[str],
+) -> list[str]:
+    """Merge new labels with existing conversation labels and apply."""
+    from app.providers.ticketing.chatwoot.mappers import conversation_to_standard_ticket
+
+    raw = await get_conversation(client, conversation_id)
+    existing = conversation_to_standard_ticket(raw).tags
+    merged = list(dict.fromkeys([*existing, *labels]))
+    await add_conversation_labels(client, conversation_id, merged)
+    return merged
