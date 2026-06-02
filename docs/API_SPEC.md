@@ -23,6 +23,9 @@ REST API contract for the ButterPOS AI Support Agent middleware. All endpoints l
 | `GET` | `/api/v1/system/health` | None | Postgres + Redis readiness |
 | `GET` | `/api/v1/system/ticketing-health` | Bearer JWT | Chatwoot adapter probe |
 | `POST` | `/api/v1/webhooks/chatwoot` | HMAC | Inbound Chatwoot webhook |
+| `GET` | `/api/v1/chat/health` | None | Remote MCP + OpenRouter readiness |
+| `POST` | `/api/v1/chat/messages` | Bearer JWT | Chat message → LLM + remote MCP |
+| `GET` | `/api/v1/chat/ui` | None | Local HTML test chat (dev only) |
 
 ### Auth (Task 1.1.2)
 
@@ -94,6 +97,68 @@ REST API contract for the ButterPOS AI Support Agent middleware. All endpoints l
 **Headers:** `Authorization: Bearer <access_token>`
 
 **Response `200`:** `ProviderHealth` — live Chatwoot probe (`GET /api`) via `ChatwootAdapter.health_check()`; includes `latency_ms` when healthy.
+
+### Chat (frontend ↔ middleware)
+
+React widget / Kotlin tablet chat with the support agent. Middleware connects to a **remote MCP server** via `MCP_SERVER_URL` — it does not spawn a local MCP subprocess.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/api/v1/chat/health` | None | Remote MCP connected + OpenRouter configured |
+| `POST` | `/api/v1/chat/messages` | Bearer JWT | Send message; agent loop runs LLM + MCP tools |
+
+Implementation: `app/api/v1/chat.py`, `app/services/agent_service.py`, `app/core/mcp/client.py`.
+
+#### Frontend flow
+
+1. `POST /api/v1/auth/token` — exchange `API_CLIENT_ID` / `API_CLIENT_SECRET` + `subject` for JWT
+2. `POST /api/v1/chat/messages` — `Authorization: Bearer <token>`, body below
+3. Optional: `GET /api/v1/chat/health` — readiness before enabling chat UI
+
+#### `GET /api/v1/chat/health`
+
+**Response `200`:**
+
+```json
+{
+  "ready": true,
+  "mcp_tools": 12,
+  "mcp_server_url": "http://127.0.0.1:3001/mcp",
+  "mcp_transport": "streamable_http",
+  "model": "openai/gpt-4o",
+  "openrouter_configured": true
+}
+```
+
+#### `POST /api/v1/chat/messages`
+
+**Headers:** `Authorization: Bearer <access_token>`
+
+**Request body:**
+
+```json
+{
+  "message": "What is the price of chicken biryani?",
+  "branch_id": "demo-branch-karachi",
+  "history": [{"role": "user", "content": "Hi"}, {"role": "assistant", "content": "Hello!"}],
+  "conversation_id": "optional-client-id"
+}
+```
+
+**Response `200`:**
+
+```json
+{
+  "reply": "Chicken Biryani is PKR 450 (PKR 522 with tax).",
+  "model": "openai/gpt-4o",
+  "tool_calls": [{"tool_name": "search_menu_items", "arguments": {}, "result": "...", "success": true}],
+  "pii_tokens_masked": 0,
+  "error": null,
+  "conversation_id": "optional-client-id"
+}
+```
+
+**Errors:** `401` missing JWT · `400` agent error with no reply
 
 ### Webhooks (Task 1.4)
 

@@ -12,7 +12,22 @@ Model Context Protocol client contract for the ButterPOS AI Support Agent middle
 | **MCP client** | This middleware | `ButterPOS-Agent` |
 | **Contract** | Shared | This document — keep in sync with server team |
 
-**Phase 0 (2026-06-01):** Production MCP server not ready. Validation uses **stub server** at `spikes/0.6_mcp_validation/stub_server/butterpos_stub_mcp.py`. Replace with production server via config when available — no agent loop code changes.
+**Phase 0 (2026-06-01):** Production MCP server not ready. Validation uses **stub server** at `spikes/0.6_mcp_validation/stub_server/butterpos_stub_mcp.py`.
+
+**Production (2026-06-02, D-17):** Middleware connects to a **remote MCP server by URL** (`MCP_SERVER_URL`). The server runs separately (backend / React stack). Middleware opens a persistent session at startup — no local subprocess.
+
+---
+
+## Middleware client (Phase 1+)
+
+| Component | Path |
+|-----------|------|
+| MCP HTTP client | `app/core/mcp/client.py` — streamable HTTP or SSE |
+| Lifecycle | `app/core/mcp/factory.py` — `init_mcp_client()` / `shutdown_mcp_client()` in FastAPI lifespan |
+| Agent loop | `app/services/agent_service.py` |
+| Frontend API | `POST /api/v1/chat/messages`, `GET /api/v1/chat/health` — see `API_SPEC.md` |
+
+Startup: `app/main.py` lifespan calls `init_mcp_client(settings)` when `MCP_SERVER_URL` is set. If unset, chat returns "MCP not connected".
 
 ---
 
@@ -20,10 +35,12 @@ Model Context Protocol client contract for the ButterPOS AI Support Agent middle
 
 | Environment | Transport | Config |
 |-------------|-----------|--------|
-| Phase 0 stub | **stdio** | `python stub_server/butterpos_stub_mcp.py` (subprocess) |
-| Production (TBD) | stdio or SSE | `MCP_SERVER_URL` or command from teammate |
+| Phase 0 spike | **stdio** | Local subprocess — `spikes/0.6_mcp_validation/` only |
+| Production / dev | **streamable_http** or **sse** | `MCP_SERVER_URL` + `MCP_TRANSPORT` in `.env` |
 
-Client implementation: `spikes/0.6_mcp_validation/client/mcp_client.py` (Phase 1 → `app/core/mcp/client.py`).
+Ask your MCP server team for the exact URL and transport. Default client transport: `streamable_http`.
+
+Legacy spike client: `spikes/0.6_mcp_validation/client/mcp_client.py`. Production code: `app/core/mcp/client.py`.
 
 ---
 
@@ -108,9 +125,25 @@ See `DECISIONS.md` D-4 validation appendix. Summary:
 
 ## Validation
 
+### Phase 0 spike
+
 ```bash
 cd spikes/0.6_mcp_validation
 python run_validation.py
 ```
 
 Reports: `spikes/0.6_mcp_validation/results/mcp_validation_*.json`
+
+### Middleware + remote MCP
+
+With middleware running and your MCP server reachable at `MCP_SERVER_URL`:
+
+```bash
+curl -s http://127.0.0.1:8000/api/v1/chat/health | jq
+```
+
+**Expected:** `"ready": true`, `"mcp_tools": N`, `"mcp_server_url": "<your url>"`.
+
+React / Kotlin frontend: `POST /api/v1/chat/messages` with JWT — see `API_SPEC.md`.
+
+Automated tests: `pytest tests/test_chat_api.py -q`

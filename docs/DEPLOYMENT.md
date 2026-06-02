@@ -285,6 +285,60 @@ Creates a test contact/conversation in Chatwoot (safe to delete manually).
 
 ---
 
+## Test middleware + remote MCP
+
+Middleware on **:8000** connects to your **separate MCP server** via URL. React frontend talks to middleware only.
+
+### Prerequisites
+
+| Requirement | `.env` keys |
+|-------------|-------------|
+| Remote MCP server running | `MCP_SERVER_URL`, `MCP_TRANSPORT` |
+| OpenRouter | `OPENROUTER_API_KEY`, `LLM_PRIMARY_MODEL` |
+| JWT for chat API | `JWT_SECRET`, `API_CLIENT_ID`, `API_CLIENT_SECRET` |
+| Redis (PII masking) | `REDIS_URL` |
+
+### Start middleware
+
+```bash
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+MCP session opens at startup against `MCP_SERVER_URL`.
+
+### Health check
+
+```bash
+curl -s http://127.0.0.1:8000/api/v1/chat/health | jq
+```
+
+**Expected:** `"ready": true`, `"mcp_tools" > 0`.
+
+### React / Kotlin frontend integration
+
+1. `POST /api/v1/auth/token` — get JWT
+2. `POST /api/v1/chat/messages` — send user message, receive agent reply + tool_calls
+
+```bash
+TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/v1/auth/token \
+  -H 'Content-Type: application/json' \
+  -d '{"client_id":"<API_CLIENT_ID>","client_secret":"<API_CLIENT_SECRET>","subject":"staff-1"}' \
+  | jq -r .access_token)
+
+curl -s -X POST http://127.0.0.1:8000/api/v1/chat/messages \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"message":"Check printer status","conversation_id":"conv-1"}' | jq
+```
+
+See `docs/API_SPEC.md` § Chat for full request/response shapes.
+
+### Local test UI (dev)
+
+Open **http://127.0.0.1:8000/api/v1/chat/ui** — HTML page for manual testing. Uses the same JWT + `/messages` API as your React app. Not for production deployment.
+
+---
+
 ## Troubleshooting
 
 | Symptom | Fix |

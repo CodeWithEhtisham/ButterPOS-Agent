@@ -451,3 +451,25 @@ python spikes/0.3_kb_audit/run_audit.py \
 ```
 
 Review output in `spikes/0.3_kb_audit/results/mvp_articles_*.csv` and sign off with support team.
+
+---
+
+## D-17 — Remote MCP by URL; chat API for React frontend
+
+**Status:** Resolved (2026-06-02)
+
+### Context
+
+The middleware is the MCP **client** only. The MCP server runs separately (backend teammate / React stack). Embedding a stdio subprocess (`MCP_SERVER_SCRIPT`) couples middleware to a local Python script and does not match production topology (React MCP server + React widget + Kotlin tablet).
+
+### Decision
+
+1. **MCP connection:** `MCP_SERVER_URL` + `MCP_TRANSPORT` (`streamable_http` default, `sse` optional). Persistent session opened at FastAPI lifespan startup; closed on shutdown.
+2. **No subprocess MCP in middleware.** MCP server runs separately; middleware connects via `MCP_SERVER_URL` only.
+3. **Frontend contract:** `POST /api/v1/chat/messages` (JWT) and `GET /api/v1/chat/health`. React/Kotlin widget obtains JWT via `POST /api/v1/auth/token`, then sends messages to middleware; middleware calls remote MCP + OpenRouter.
+
+### Consequences
+
+- Teammate exposes MCP at a URL; middleware only needs that URL in `.env`.
+- Built-in HTML demo UI removed — chat UI is the separate React app.
+- Phase 2 webhook → agent path reuses the same `AgentService` + remote MCP client.

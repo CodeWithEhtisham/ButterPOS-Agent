@@ -10,7 +10,7 @@ def test_settings_defaults() -> None:
     settings = Settings()
     assert settings.app_name == "ButterPOS Support Agent"
     assert settings.ticketing_provider == "chatwoot"
-    assert settings.llm_primary_model == "openai/gpt-4o"
+    assert settings.llm_primary_model == "openai/gpt-4o-mini"
     assert settings.openrouter_base_url == "https://openrouter.ai/api/v1"
     assert "asyncpg" in settings.database_url
 

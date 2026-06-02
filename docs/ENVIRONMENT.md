@@ -163,6 +163,15 @@ Requires `REDIS_URL` for production rate limiting. Outgoing messages and non-`me
 | `MIDDLEWARE_PORT` | Optional | Uvicorn bind port (default `8000`) |
 | `MIDDLEWARE_BASE_URL` | Optional | Base URL for smoke/validation scripts |
 
+### MCP / chat (remote MCP server)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MCP_SERVER_URL` | Chat enabled | Remote MCP endpoint, e.g. `http://localhost:3001/mcp` |
+| `MCP_TRANSPORT` | Optional | `streamable_http` (default) or `sse` |
+| `AGENT_DEFAULT_BRANCH_ID` | Optional | Default branch for MCP tool calls (default `demo-branch-karachi`) |
+| `AGENT_MAX_TOOL_ROUNDS` | Optional | Max LLM↔tool loops per chat message (default `6`) |
+
 ## Credential locations
 
 | Credential | Assumption | Where to obtain | Storage |
@@ -175,8 +184,8 @@ Requires `REDIS_URL` for production rate limiting. Outgoing messages and non-`me
 | DB read access | A2 | ButterPOS backend team — read-only Postgres user | `.env` → `DATABASE_URL` |
 | Data export file | A2 | ButterPOS backend team — CSV/JSON export | `.env` → `BUTTERPOS_DATA_EXPORT` |
 | Billing API | A3 | ButterPOS backend/billing team — API docs + token | `.env` → `BILLING_API_URL` |
-| MCP stub server | A5 / Step 0.6 | Local stdio subprocess — `spikes/0.6_mcp_validation/stub_server/` | Path in repo (no secret) |
-| MCP production server | A5 | Backend teammate (future) | `.env` → `MCP_SERVER_URL` |
+| MCP spike (Phase 0) | A5 / Step 0.6 | Local stdio — `spikes/0.6_mcp_validation/stub_server/` | Path in repo (no secret) |
+| MCP production server | A5 | Backend teammate — HTTP endpoint | `.env` → `MCP_SERVER_URL` |
 | WhatsApp export | A6 | Support team — 3–6 month chat export | `.env` → `WHATSAPP_EXPORT_PATH` |
 
 Never commit secrets. Reference by env var name only in docs and code.

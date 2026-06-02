@@ -109,13 +109,28 @@ class Settings(BaseSettings):
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_app_url: str = ""
     openrouter_app_name: str = "ButterPOS Support Agent"
-    llm_primary_model: str = "openai/gpt-4o"
+    llm_primary_model: str = "openai/gpt-4o-mini"
     llm_fallback_model: str = "openai/gpt-4o-mini"
     llm_judge_model: str = "openai/gpt-4o-mini"
 
-    # MCP (Task 1.x / Phase 2 agent loop)
+    # MCP — remote server (middleware is MCP client only)
+    mcp_server_url: str = Field(
+        default="",
+        description="Remote MCP server URL — e.g. http://localhost:3001/mcp",
+    )
+    mcp_transport: Literal["streamable_http", "sse"] = Field(
+        default="streamable_http",
+        description="Transport to remote MCP server",
+    )
+    agent_default_branch_id: str = Field(
+        default="demo-branch-karachi",
+        description="Default branch_id injected into MCP tool calls",
+    )
+    agent_max_tool_rounds: int = Field(
+        default=6,
+        description="Max LLM↔tool iterations per agent chat request",
+    )
     mcp_stub_server: str = "spikes/0.6_mcp_validation/stub_server/butterpos_stub_mcp.py"
-    mcp_server_url: str = ""
 
     # Auth (Task 1.1 sub-step 2)
     jwt_secret: str = ""

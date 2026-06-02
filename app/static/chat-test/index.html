@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ButterPOS Chat Test</title>
+  <link rel="stylesheet" href="/api/v1/chat/ui/static/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>ButterPOS Chat Test</h1>
+      <p class="subtitle">Port 8000 · JWT + OpenRouter + MCP POS tools</p>
+      <div id="status" class="status">Checking…</div>
+    </header>
+
+    <section id="login-panel" class="login-panel hidden">
+      <p>Sign in with API client credentials (from your <code>.env</code>):</p>
+      <label>Client ID <input id="client-id" type="text" autocomplete="username" /></label>
+      <label>Client Secret <input id="client-secret" type="password" autocomplete="current-password" /></label>
+      <label>Subject <input id="subject" type="text" value="demo-staff" /></label>
+      <button type="button" id="login-btn">Get token</button>
+    </section>
+
+    <main id="messages" class="messages" aria-live="polite"></main>
+
+    <form id="chat-form" class="composer hidden">
+      <textarea id="input" rows="2" placeholder="Ask about menu prices, update items, fix printer…" required></textarea>
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+  </div>
+  <script src="/api/v1/chat/ui/static/app.js"></script>
+</body>
+</html>
