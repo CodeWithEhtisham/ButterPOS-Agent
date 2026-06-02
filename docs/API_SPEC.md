@@ -210,6 +210,8 @@ Implementation: `app/providers/ticketing/chatwoot/mappers.py`.
 | `tags` | `POST /conversations/{id}/labels` |
 | `metadata.source_id` | Request `metadata.source_id` or generated `butterpos-{contact_id}-{uuid}` |
 
+**Request dedup (Task 1.5.3):** When `metadata.client_request_id`, `source_id`, or `idempotency_key` is present, `DedupingTicketingProvider` returns the cached ticket for replays within TTL — prevents double-tap duplicate conversations.
+
 Requires `CHATWOOT_INBOX_ID` (API-channel inbox). Implementation: `app/providers/ticketing/chatwoot/conversations.py`, `mappers.py`.
 
 ### `add_comment()` / `add_note()` (Task 1.3.4)

@@ -7,6 +7,8 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from app.core.dedup.store import InMemoryDedupStore
+from app.core.dedup.webhook import WebhookHotDedupStore
 from app.core.exceptions import AppError
 from app.models.standard import StandardEvent, StandardEventType
 from app.repositories.webhook_event_repository import (
@@ -79,7 +81,13 @@ def test_webhook_service_returns_duplicate_status() -> None:
         provider.parse_webhook = AsyncMock(return_value=_event())
 
         session = IdempotencyMemorySession()
-        service = WebhookService(provider, session, dispatcher=NoOpWebhookDispatcher())
+        service = WebhookService(
+            provider,
+            session,
+            dispatcher=NoOpWebhookDispatcher(),
+            hot_dedup=WebhookHotDedupStore(InMemoryDedupStore(), ttl_seconds=3600),
+            rate_limiter=MagicMock(check=AsyncMock()),
+        )
         body = b'{"event":"message_created","id":1}'
 
         first = await service.receive_chatwoot(body, {})

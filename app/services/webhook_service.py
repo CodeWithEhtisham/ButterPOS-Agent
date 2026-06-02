@@ -10,6 +10,7 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
+from app.core.dedup.webhook import WebhookHotDedupStore, get_webhook_hot_dedup_store
 from app.core.exceptions import RateLimitExceededError, WebhookVerificationError
 from app.core.logging_config import get_logger
 from app.core.rate_limit.inbound_message_limits import (
@@ -19,6 +20,7 @@ from app.core.rate_limit.inbound_message_limits import (
 from app.models.standard import StandardEvent
 from app.providers.ticketing.base import TicketingProvider
 from app.repositories.webhook_event_repository import (
+    compute_payload_hash,
     mark_webhook_failed,
     record_webhook_event,
 )
@@ -53,6 +55,7 @@ class WebhookService:
         dispatcher: WebhookDispatcher | None = None,
         dlq_store: WebhookDlqStore | InMemoryWebhookDlqStore | None = None,
         rate_limiter: InboundMessageRateLimiter | None = None,
+        hot_dedup: WebhookHotDedupStore | None = None,
     ) -> None:
         self._provider = provider
         self._session = session
@@ -60,6 +63,7 @@ class WebhookService:
         self._dispatcher = dispatcher if dispatcher is not None else get_webhook_dispatcher()
         self._dlq_store = dlq_store
         self._rate_limiter = rate_limiter if rate_limiter is not None else get_inbound_message_rate_limiter()
+        self._hot_dedup = hot_dedup if hot_dedup is not None else get_webhook_hot_dedup_store()
 
     def _get_dlq_store(self) -> WebhookDlqStore | InMemoryWebhookDlqStore:
         if self._dlq_store is None:
@@ -72,10 +76,27 @@ class WebhookService:
             raise WebhookVerificationError()
 
         event = await self._provider.parse_webhook(raw_body, headers)
+        payload_hash = compute_payload_hash(raw_body)
+
+        if event.idempotency_key and await self._hot_dedup.is_duplicate(event.idempotency_key):
+            logger.info(
+                "webhook_hot_dedup_duplicate idempotency_key=%s ticket_id=%s",
+                event.idempotency_key,
+                event.provider_ticket_id,
+                extra={"idempotency_key": event.idempotency_key, "ticket_id": event.provider_ticket_id},
+            )
+            return WebhookReceiveResult(
+                event=event,
+                status="duplicate",
+                idempotency_key=event.idempotency_key,
+                payload_hash=payload_hash,
+            )
+
         record = await record_webhook_event(self._session, event=event, raw_body=raw_body)
 
         status: WebhookReceiveStatus = "duplicate" if record.status == "duplicate" else "accepted"
         if record.status == "received":
+            await self._hot_dedup.remember(record.idempotency_key)
             try:
                 await self._rate_limiter.check(event)
             except RateLimitExceededError as exc:

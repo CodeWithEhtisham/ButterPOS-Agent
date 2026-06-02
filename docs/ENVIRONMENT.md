@@ -128,6 +128,15 @@ Requires `REDIS_URL` for Celery broker and DLQ. Run worker + beat per `DEPLOYMEN
 
 Requires `REDIS_URL` for production rate limiting. Outgoing messages and non-`message_created` events are not counted.
 
+### Request dedup (Task 1.5.3)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `REQUEST_DEDUP_REDIS_PREFIX` | Optional | Redis key prefix for ticket-creation dedup (default `dedup:request:`) |
+| `REQUEST_DEDUP_TTL_SECONDS` | Optional | Cached `create_ticket` result TTL (default `86400`) |
+| `WEBHOOK_HOT_DEDUP_REDIS_PREFIX` | Optional | Redis hot-path prefix for webhook idempotency (default `dedup:webhook:`) |
+| `WEBHOOK_HOT_DEDUP_TTL_SECONDS` | Optional | Hot webhook dedup TTL (default `86400`) |
+
 ## Credential locations
 
 | Credential | Assumption | Where to obtain | Storage |

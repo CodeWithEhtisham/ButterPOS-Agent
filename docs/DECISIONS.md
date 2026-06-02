@@ -341,6 +341,26 @@ When a rate limit is exceeded at webhook ingress, return HTTP **`200`** with `st
 
 ---
 
+## D-14 — Ticket creation dedup requires client-supplied key
+
+**Status:** Locked (2026-06-02)
+
+### Context
+
+Task 1.5.3 must prevent double-tap duplicate Chatwoot conversations from the tablet widget without breaking legitimate multi-ticket flows.
+
+### Decision
+
+Only deduplicate `create_ticket()` when the client sends `metadata.client_request_id`, `source_id`, or `idempotency_key`. Requests without a dedup key always create a new ticket. Cached results live in Redis for `REQUEST_DEDUP_TTL_SECONDS` (default 24h).
+
+### Consequences
+
+- Widget must generate and reuse a UUID per user tap/intent.
+- Server-side hash of message body is **not** used — different messages with no client id correctly create separate tickets.
+- Factory wraps adapter with `DedupingTicketingProvider` before the read cache decorator.
+
+---
+
 ## D-10 — KB MVP list gates Phase 2
 
 **Status:** Resolved (2026-06-01) — tooling ready; production audit pending WhatsApp export

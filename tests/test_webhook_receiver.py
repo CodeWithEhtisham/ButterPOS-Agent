@@ -15,6 +15,8 @@ from app.main import create_app
 from app.models.standard import StandardEvent, StandardEventType
 from app.providers.ticketing.chatwoot.webhooks import compute_chatwoot_signature
 from app.providers.ticketing.factory import get_ticketing_provider
+from app.core.dedup.store import InMemoryDedupStore
+from app.core.dedup.webhook import WebhookHotDedupStore, clear_webhook_hot_dedup_store_cache
 from app.core.rate_limit.inbound_message_limits import (
     build_inbound_message_rate_limiter,
     clear_inbound_message_rate_limiter_cache,
@@ -48,6 +50,7 @@ def webhook_client(webhook_settings: Settings, monkeypatch: pytest.MonkeyPatch) 
     clear_webhook_dispatcher_cache()
     clear_webhook_dlq_store_cache()
     clear_inbound_message_rate_limiter_cache()
+    clear_webhook_hot_dedup_store_cache()
     high_limit = build_inbound_message_rate_limiter(
         webhook_settings,
         user_limiter=InMemorySlidingWindowRateLimiter(limit=10_000, window_seconds=3600),
@@ -64,6 +67,11 @@ def webhook_client(webhook_settings: Settings, monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(
         "app.services.webhook_service.get_inbound_message_rate_limiter",
         lambda: high_limit,
+    )
+    hot_dedup = WebhookHotDedupStore(InMemoryDedupStore(), ttl_seconds=3600)
+    monkeypatch.setattr(
+        "app.services.webhook_service.get_webhook_hot_dedup_store",
+        lambda: hot_dedup,
     )
     shared_store = IdempotencyMemorySession()
 
@@ -181,9 +189,21 @@ def test_webhook_service_delegates_to_provider() -> None:
     body = b'{"event":"message_created","id":1,"created_at":"2026-03-04T10:30:00Z","conversation":{"id":2}}'
 
     try:
+        hot_dedup = WebhookHotDedupStore(InMemoryDedupStore(), ttl_seconds=3600)
+        high_limit = build_inbound_message_rate_limiter(
+            Settings(_env_file=None),
+            user_limiter=InMemorySlidingWindowRateLimiter(limit=10_000, window_seconds=3600),
+            restaurant_limiter=InMemorySlidingWindowRateLimiter(limit=10_000, window_seconds=86400),
+        )
         with patch(
             "app.services.webhook_service.get_webhook_dispatcher",
             lambda: NoOpWebhookDispatcher(),
+        ), patch(
+            "app.services.webhook_service.get_webhook_hot_dedup_store",
+            lambda: hot_dedup,
+        ), patch(
+            "app.services.webhook_service.get_inbound_message_rate_limiter",
+            lambda: high_limit,
         ):
             client = TestClient(app)
             response = client.post(

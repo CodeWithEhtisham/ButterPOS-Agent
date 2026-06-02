@@ -9,6 +9,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.core.config import Settings, get_settings
+from app.core.dedup.store import InMemoryDedupStore
+from app.core.dedup.webhook import WebhookHotDedupStore
 from app.core.exceptions import WebhookProcessingError
 from app.models.standard import StandardEvent, StandardEventType
 from app.repositories.webhook_event_repository import mark_webhook_failed, mark_webhook_processed
@@ -76,7 +78,13 @@ def test_process_webhook_event_accepts_message_created() -> None:
                 "app.services.webhook_processor.get_ticketing_read_cache",
                 lambda: read_cache,
             )
-            await process_webhook_event(_event())
+            from app.core.pii.detector import RegexPiiDetector
+            from app.core.pii.masker import PIIMasker
+            from app.core.pii.store import InMemoryPiiTokenStore
+            from app.services.inbound_pii_service import InboundPiiService
+
+            pii = InboundPiiService(PIIMasker(InMemoryPiiTokenStore(), RegexPiiDetector()))
+            await process_webhook_event(_event(), pii_service=pii)
 
     asyncio.run(_run())
 
@@ -125,6 +133,8 @@ def test_webhook_service_falls_back_to_dlq_on_dispatch_failure() -> None:
             settings=settings,
             dispatcher=FailingDispatcher(),
             dlq_store=dlq,
+            hot_dedup=WebhookHotDedupStore(InMemoryDedupStore(), ttl_seconds=3600),
+            rate_limiter=MagicMock(check=AsyncMock()),
         )
         result = await service.receive_chatwoot(b"{}", {})
         assert result.status == "accepted"

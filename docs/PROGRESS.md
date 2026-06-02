@@ -43,7 +43,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | **1.2** | PostgreSQL schema + migrations | **Complete** (2026-06-02) |
 | **1.3** | `ChatwootAdapter` | **Complete** (2026-06-02) |
 | **1.4** | Webhook receiver + `StandardEvent` parser | **Complete** (2026-06-02) |
-| **1.5** | Redis cache + rate limiting | **In progress** |
+| **1.5** | Redis cache + rate limiting | **Complete** (2026-06-02) |
 | **1.6** | Customer/Branch mapping + unit tests (100% coverage) | Not started |
 | **1.7** | Data seeding + validation | Not started |
 
@@ -53,7 +53,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 |---|----------|--------|
 | 1 | Ticket cache (60s) + contact cache (24h) + webhook invalidation | **Complete** (2026-06-02) |
 | 2 | Per-user + per-restaurant rate limits | **Complete** (2026-06-02) |
-| 3 | Request dedup + PII token mapping | Not started |
+| 3 | Request dedup + PII token mapping | **Complete** (2026-06-02) |
 
 ### Task 1.4 sub-steps
 
@@ -105,7 +105,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 - [ ] Middleware runs
 - [ ] `ChatwootAdapter` passes against local Chatwoot
 - [x] Webhooks ingest idempotently with DLQ + polling
-- [ ] Caching + rate limits live
+- [x] Caching + rate limits live
 - [ ] Mapping at 100% coverage
 - [ ] Data seeded and jointly validated
 - [ ] Every doc current

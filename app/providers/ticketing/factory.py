@@ -7,6 +7,9 @@ from functools import lru_cache
 
 from app.core.config import Settings, get_settings
 from app.core.cache.ticketing_read_cache import TicketingReadCache, build_ticketing_read_cache
+from app.core.dedup.store import DedupStore
+from app.core.dedup.ticket_creation_store import build_ticket_creation_dedup_store
+from app.providers.ticketing.deduping_adapter import DedupingTicketingProvider
 from app.providers.ticketing.base import TicketingProvider
 from app.providers.ticketing.caching_adapter import CachingTicketingProvider
 from app.providers.ticketing.chatwoot_adapter import ChatwootAdapter
@@ -26,8 +29,9 @@ def create_ticketing_provider(
     settings: Settings,
     *,
     read_cache: TicketingReadCache | None = None,
+    dedup_store: DedupStore | None = None,
 ) -> TicketingProvider:
-    """Instantiate the configured ticketing adapter with read-through Redis cache."""
+    """Instantiate the configured ticketing adapter with dedup + read-through Redis cache."""
     name = settings.ticketing_provider
     builder = _REGISTRY.get(name)
     if builder is None:
@@ -36,8 +40,14 @@ def create_ticketing_provider(
             f"Unknown ticketing provider {name!r}. Supported: {supported}"
         )
     inner = builder(settings)
+    store = dedup_store or build_ticket_creation_dedup_store(settings)
+    deduped = DedupingTicketingProvider(
+        inner,
+        store,
+        ttl_seconds=settings.request_dedup_ttl_seconds,
+    )
     cache = read_cache or build_ticketing_read_cache(settings)
-    return CachingTicketingProvider(inner, cache)
+    return CachingTicketingProvider(deduped, cache)
 
 
 @lru_cache

@@ -157,6 +157,24 @@ class Settings(BaseSettings):
         description="Redis key prefix for per-restaurant message limits",
     )
 
+    # Request dedup (Task 1.5.3)
+    request_dedup_redis_prefix: str = Field(
+        default="dedup:request:",
+        description="Redis key prefix for ticket-creation request dedup",
+    )
+    request_dedup_ttl_seconds: int = Field(
+        default=86400,
+        description="TTL for cached create_ticket results (24h)",
+    )
+    webhook_hot_dedup_redis_prefix: str = Field(
+        default="dedup:webhook:",
+        description="Redis key prefix for webhook idempotency hot-path",
+    )
+    webhook_hot_dedup_ttl_seconds: int = Field(
+        default=86400,
+        description="TTL for webhook hot dedup entries (24h)",
+    )
+
     @field_validator("log_level", mode="before")
     @classmethod
     def normalize_log_level(cls, value: object) -> str:

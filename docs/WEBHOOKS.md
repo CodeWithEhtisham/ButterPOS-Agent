@@ -126,7 +126,7 @@ Local dev may require HTTPS or ngrok — Chatwoot rejects plain HTTP URLs in pro
 
 ## Idempotency
 
-Persisted in Postgres table `webhook_event_log` (Task 1.2.5). Redis dedup (Task 1.5) is an optional hot-path layer on top.
+Persisted in Postgres table `webhook_event_log` (Task 1.2.5). **Redis hot dedup** (Task 1.5.3) checks `idempotency_key` before Postgres on replays within TTL.
 
 | Field | Purpose |
 |-------|---------|
@@ -164,6 +164,30 @@ Duplicate events: ack `200`, skip processing.
 Implementation: `app/core/rate_limit/sliding_window.py`, `app/core/rate_limit/inbound_message_limits.py`, wired in `WebhookService.receive_chatwoot()`.
 
 Env vars: see `ENVIRONMENT.md` § Inbound message rate limits.
+
+---
+
+## Request deduplication
+
+**Task 1.5.3** — two Redis-backed dedup layers:
+
+### Ticket creation (double-tap protection)
+
+When the tablet widget calls `create_ticket()` with a client id in metadata:
+
+| Metadata key | Purpose |
+|--------------|---------|
+| `client_request_id` | Preferred — UUID from widget per tap |
+| `source_id` | Chatwoot source id (also used by adapter) |
+| `idempotency_key` | Generic fallback |
+
+If none are set, every call creates a new conversation (no dedup). Replays within `REQUEST_DEDUP_TTL_SECONDS` return the cached `StandardTicket` without a second Chatwoot API call.
+
+Factory chain: `ChatwootAdapter` → `DedupingTicketingProvider` → `CachingTicketingProvider`.
+
+### Webhook hot path
+
+Before Postgres insert, `WebhookHotDedupStore` checks Redis for a recent `idempotency_key`. On hit → HTTP `200` + `status: duplicate` without touching Postgres. On first accept → key stored in Redis after Postgres `received`.
 
 ---
 

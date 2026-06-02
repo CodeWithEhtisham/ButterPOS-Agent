@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from app.core.config import Settings
+from app.core.dedup.store import InMemoryDedupStore
+from app.core.dedup.webhook import WebhookHotDedupStore
 from app.core.exceptions import RateLimitExceededError
 from app.core.rate_limit.inbound_message_limits import (
     InboundMessageRateLimiter,
@@ -118,6 +120,7 @@ def test_webhook_service_returns_rate_limited_without_dispatch() -> None:
             settings=Settings(_env_file=None),
             dispatcher=NoOpWebhookDispatcher(),
             rate_limiter=rate_limiter,
+            hot_dedup=WebhookHotDedupStore(InMemoryDedupStore(), ttl_seconds=3600),
         )
         first = await service.receive_chatwoot(b"{}", {})
         provider.parse_webhook = AsyncMock(

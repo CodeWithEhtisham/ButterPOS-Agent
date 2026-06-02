@@ -94,6 +94,21 @@ Postgres `ticket_cache` table (Task 1.2) is the **durable mirror** for polling; 
 
 Checked in `WebhookService` after Postgres idempotency insert; duplicates do not consume quota. Over-limit webhooks ack `200 rate_limited` and skip Celery — protects LLM cost and platform API abuse without triggering Chatwoot retries.
 
+## Request deduplication
+
+**Task 1.5.3** — Redis layers prevent duplicate work on retried client requests and webhook replays.
+
+| Layer | Scope | Module |
+|-------|-------|--------|
+| Ticket creation | `create_ticket()` when `metadata.client_request_id`, `source_id`, or `idempotency_key` is set | `DedupingTicketingProvider` in factory chain |
+| Webhook hot path | `idempotency_key` before Postgres insert | `WebhookHotDedupStore` in `WebhookService` |
+
+Postgres `webhook_event_log` remains the durable audit trail; Redis hot dedup is an optimization for platform replays within TTL.
+
+## Inbound PII masking
+
+**Task 1.5.3** — `InboundPiiService` masks incoming `message_body` in `process_webhook_event()` before agent/LLM paths. Tokens stored in Redis (`pii:token:{id}`) via Task 1.1.7 `PIIMasker`.
+
 - **PII token map** — Task 1.1.7: Redis `pii:token:{id}` → original value, **24h TTL**. Used to unmask LLM responses. Invalid/expired tokens remain as placeholders in text.
 
 ---

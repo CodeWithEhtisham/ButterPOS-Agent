@@ -6,18 +6,27 @@ from app.core.cache.ticketing_read_cache import get_ticketing_read_cache
 from app.core.exceptions import WebhookProcessingError
 from app.core.logging_config import get_logger
 from app.models.standard import StandardEvent, StandardEventType
+from app.services.inbound_pii_service import InboundPiiService, get_inbound_pii_service
 
 logger = get_logger("app.webhooks")
 
 
-async def process_webhook_event(event: StandardEvent) -> None:
+async def process_webhook_event(
+    event: StandardEvent,
+    *,
+    pii_service: InboundPiiService | None = None,
+) -> None:
     """Handle a normalized webhook event after idempotency gate.
 
-    V1 validates known event types and invalidates Redis read caches so the
-    next get_ticket / get_or_create_contact fetches fresh platform data.
+    V1 validates known event types, masks inbound PII in message bodies (Redis token
+    map), and invalidates Redis read caches so the next get_ticket /
+    get_or_create_contact fetches fresh platform data.
     """
     if event.event_type is StandardEventType.UNKNOWN:
         raise WebhookProcessingError(f"Unsupported webhook event type: {event.event_type.value}")
+
+    service = pii_service if pii_service is not None else get_inbound_pii_service()
+    event = await service.mask_event_for_processing(event)
 
     await get_ticketing_read_cache().invalidate_for_webhook(
         provider_ticket_id=event.provider_ticket_id,

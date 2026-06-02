@@ -11,6 +11,8 @@ from app.main import create_app
 from app.providers.ticketing.chatwoot.client import ChatwootClient
 from app.providers.ticketing.caching_adapter import CachingTicketingProvider
 from app.providers.ticketing.chatwoot_adapter import ChatwootAdapter
+from app.core.dedup.store import InMemoryDedupStore
+from app.providers.ticketing.deduping_adapter import DedupingTicketingProvider
 from app.core.cache.json_blob_cache import InMemoryJsonBlobCache
 from app.core.cache.ticketing_read_cache import build_ticketing_read_cache
 from app.providers.ticketing.factory import (
@@ -43,9 +45,15 @@ def factory_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
 def test_factory_returns_chatwoot_adapter(factory_settings: Settings) -> None:
     blob = InMemoryJsonBlobCache()
     read_cache = build_ticketing_read_cache(factory_settings, blob_cache=blob)
-    provider = create_ticketing_provider(factory_settings, read_cache=read_cache)
+    dedup_store = InMemoryDedupStore()
+    provider = create_ticketing_provider(
+        factory_settings,
+        read_cache=read_cache,
+        dedup_store=dedup_store,
+    )
     assert isinstance(provider, CachingTicketingProvider)
-    assert isinstance(provider.inner, ChatwootAdapter)
+    assert isinstance(provider.inner, DedupingTicketingProvider)
+    assert isinstance(provider.inner.inner, ChatwootAdapter)
     assert provider.provider_name == "chatwoot"
 
 

@@ -158,6 +158,8 @@ reply = await masker.unmask(llm_response.content)
 
 Implementation: `app/core/pii/masker.py`, `app/core/pii/store.py`, `app/core/pii/detector.py`.
 
+**Task 1.5.3 integration:** `InboundPiiService` (`app/services/inbound_pii_service.py`) masks incoming webhook `message_body` in `process_webhook_event()` before cache invalidation / future agent loop. Logs `token_count` only — never cleartext PII.
+
 ### Configuration
 
 | Variable | Default | Description |
