@@ -128,4 +128,20 @@ Implementation: `app/providers/ticketing/chatwoot/mappers.py`.
 
 Requires `CHATWOOT_INBOX_ID` (API-channel inbox). Implementation: `app/providers/ticketing/chatwoot/conversations.py`, `mappers.py`.
 
+### `add_comment()` / `add_note()` (Task 1.3.4)
+
+| Method | Chatwoot API | Visibility |
+|--------|--------------|------------|
+| `add_comment(req)` | `POST /conversations/{id}/messages` with `private: false` | Customer-visible AI reply |
+| `add_note(req)` | `POST /conversations/{id}/messages` with `private: true` | Internal agent handoff note |
+
+Optional rich UI on public comments via `AddCommentRequest.metadata`:
+
+| Metadata key | Purpose |
+|--------------|---------|
+| `content_type` | e.g. `text`, `input_select` (Step 0.1 spike) |
+| `content_attributes` | JSON object for buttons/cards — never URL-encoded string |
+
+Notes always use plain `text`; no rich attributes.
+
 ---

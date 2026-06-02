@@ -127,18 +127,31 @@ async def send_conversation_message(
     *,
     content: str,
     private: bool = False,
+    content_type: str = "text",
+    content_attributes: dict[str, Any] | None = None,
 ) -> None:
-    """POST /conversations/{id}/messages."""
-    payload = {
+    """POST /conversations/{id}/messages — public reply or private agent note."""
+    payload: dict[str, Any] = {
         "content": content,
         "message_type": "outgoing",
-        "content_type": "text",
+        "content_type": content_type,
         "private": private,
     }
+    if content_attributes:
+        payload["content_attributes"] = content_attributes
+
     await client.request(
         "POST",
         client.account_path(f"/conversations/{conversation_id}/messages"),
         json=payload,
+    )
+    logger.info(
+        "Chatwoot message posted",
+        extra={
+            "conversation_id": conversation_id,
+            "private": private,
+            "content_type": content_type,
+        },
     )
 
 

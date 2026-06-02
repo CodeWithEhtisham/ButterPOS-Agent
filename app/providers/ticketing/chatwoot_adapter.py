@@ -138,10 +138,30 @@ class ChatwootAdapter(TicketingProvider):
         return conversation_to_standard_ticket(updated)
 
     async def add_comment(self, request: AddCommentRequest) -> None:
-        raise NotImplementedError(_TASK_1_3_REMAINING)
+        """Post a public AI reply visible to the customer."""
+        conversation_id = parse_conversation_id(request.provider_ticket_id)
+        content_type = str(request.metadata.get("content_type", "text"))
+        content_attributes = request.metadata.get("content_attributes")
+        if content_attributes is not None and not isinstance(content_attributes, dict):
+            content_attributes = None
+        await send_conversation_message(
+            self._client,
+            conversation_id,
+            content=request.body,
+            private=False,
+            content_type=content_type,
+            content_attributes=content_attributes,
+        )
 
     async def add_note(self, request: AddNoteRequest) -> None:
-        raise NotImplementedError(_TASK_1_3_REMAINING)
+        """Post an internal handoff note — agent-only, not visible to customer."""
+        conversation_id = parse_conversation_id(request.provider_ticket_id)
+        await send_conversation_message(
+            self._client,
+            conversation_id,
+            content=request.body,
+            private=True,
+        )
 
     async def assign_agent(self, request: AssignAgentRequest) -> StandardTicket:
         raise NotImplementedError(_TASK_1_3_REMAINING)
