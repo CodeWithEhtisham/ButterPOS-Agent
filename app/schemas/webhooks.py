@@ -8,12 +8,14 @@ from pydantic import BaseModel
 
 from app.models.standard import StandardEventType
 
+WebhookResponseStatus = Literal["accepted", "duplicate"]
+
 
 class WebhookAcceptedResponse(BaseModel):
-    """Acknowledgement after verify + parse — processing is deferred to later steps."""
+    """Acknowledgement after verify, parse, and idempotency gate."""
 
-    status: Literal["accepted"] = "accepted"
+    status: WebhookResponseStatus
     event_type: StandardEventType
     provider_event_id: str
     provider_ticket_id: str
-    idempotency_key: str | None = None
+    idempotency_key: str

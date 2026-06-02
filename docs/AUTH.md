@@ -102,7 +102,9 @@ Registration: `ChatwootAdapter.register_webhook(callback_url)` → save returned
 
 Inbound receiver: `POST /api/v1/webhooks/chatwoot` — HMAC-only (no JWT). Implemented Task 1.4.1.
 
-Task 1.4.2 adds idempotency persistence to `webhook_event_log`.
+Idempotency: Postgres `webhook_event_log` with unique `idempotency_key` + SHA-256 `payload_hash` (Task 1.4.2).
+
+Task 1.4.3 adds Redis DLQ for failed processing.
 
 ---
 

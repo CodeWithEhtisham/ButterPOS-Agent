@@ -9,8 +9,8 @@ Inbound webhook handling for the ticketing platform (Chatwoot).
 1. Chatwoot POSTs JSON to `POST /api/v1/webhooks/chatwoot` (**Task 1.4.1** — live).
 2. `WebhookService` reads **raw body bytes** and calls `ChatwootAdapter.verify_webhook()`.
 3. `ChatwootAdapter.parse_webhook()` maps payload → `StandardEvent`.
-4. Endpoint returns `200` with `status: accepted` (processing queue — sub-step 2+).
-5. Idempotency check (unique key + payload hash) — skip duplicates (**Task 1.4.2**).
+4. Endpoint returns `200` with `status: accepted` or `status: duplicate` (**Task 1.4.2** — live).
+5. Idempotency row persisted in `webhook_event_log` (`received` on first delivery; replays skip insert).
 6. Process event (queue agent loop, invalidate cache) — later phases.
 7. Failures → DLQ (**Task 1.4.3**).
 
@@ -133,12 +133,12 @@ Persisted in Postgres table `webhook_event_log` (Task 1.2.5). Redis dedup (Task 
 | `payload_hash` | SHA-256 hex (64 chars) of raw request body for audit |
 | `status` | `received`, `processed`, `duplicate`, `failed` |
 
-**Flow (Task 1.4):**
+**Flow (Task 1.4.2 — implemented):**
 
-1. Compute `idempotency_key` and `payload_hash` from raw body.
-2. Insert row; on unique violation → return `200`, skip processing (`duplicate`).
-3. On success → process event, set `status=processed`, `processed_at=now()`.
-4. On failure → set `status=failed`, `error_message`; push to Redis DLQ for retry.
+1. Compute `idempotency_key` (from adapter) and `payload_hash` = SHA-256 hex of raw body.
+2. Insert row with `status=received`; on unique violation → return `200` with `status=duplicate`, skip processing.
+3. On success → return `200` with `status=accepted` (processing deferred to agent loop).
+4. On processing failure (later) → set `status=failed`, `error_message`; push to Redis DLQ for retry.
 
 Duplicate events: ack `200`, skip processing.
 

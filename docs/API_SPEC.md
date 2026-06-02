@@ -96,11 +96,25 @@ REST API contract for the ButterPOS AI Support Agent middleware. All endpoints l
 }
 ```
 
-**Errors:** `401` invalid/missing signature · `400` malformed payload
+Duplicate replay (same `idempotency_key` already in `webhook_event_log`):
 
-**Implementation:** `app/api/v1/webhooks.py` → `WebhookService.receive_chatwoot()` → `TicketingProvider.verify_webhook()` / `parse_webhook()`.
+```json
+{
+  "status": "duplicate",
+  "event_type": "message_created",
+  "provider_event_id": "12345",
+  "provider_ticket_id": "5678",
+  "idempotency_key": "message_created:12345"
+}
+```
 
-Idempotency persistence and event processing: Task 1.4 sub-steps 2+.
+Both return HTTP `200` — Chatwoot must not retry on duplicates.
+
+**Errors:** `401` invalid/missing signature · `400` malformed payload or missing idempotency key
+
+**Implementation:** `app/api/v1/webhooks.py` → `WebhookService.receive_chatwoot()` → `record_webhook_event()` in `app/repositories/webhook_event_repository.py`.
+
+Event processing and DLQ: Task 1.4 sub-steps 3+.
 
 ---
 
