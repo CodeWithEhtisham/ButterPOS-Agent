@@ -26,7 +26,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 - [x] Direct probe — all 4 tools PASS (`mcp_validation_20260601T090513Z.json`)
 - [x] `MCP_INTEGRATION.md` — full contract documented
 - [x] D-4 validation appendix in `DECISIONS.md`
-- [ ] LLM portability test — pending `OPENROUTER_API_KEY` (default slugs: `openai/gpt-4o`, `openai/gpt-4o-mini`)
+- [x] LLM portability test — **PASS** (2026-06-02): `openai/gpt-4o-mini`, `anthropic/claude-3-haiku` via OpenRouter
 
 **Phase 0 exit criteria:**
 

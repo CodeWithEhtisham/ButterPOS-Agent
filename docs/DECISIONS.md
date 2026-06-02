@@ -111,7 +111,7 @@ Use **MCP**. The backend teammate owns the MCP server (ButterPOS models, APIs, b
 | MCP client connects (stdio) | Validated |
 | `list_tools` — 4 tools discovered | Validated |
 | Direct `call_tool` probe | **Pass** (2026-06-01) |
-| LLM + MCP agent loop | Pending `OPENROUTER_API_KEY` — re-run `run_validation.py` |
+| LLM + MCP agent loop | **Pass** (2026-06-02) — `openai/gpt-4o-mini`, `anthropic/claude-3-haiku` via OpenRouter |
 
 **Why MCP beat direct calling (evidence):**
 

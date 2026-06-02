@@ -88,7 +88,7 @@ Tool-calling validated via `LLMProvider` interface (Step 0.6):
 
 - **Direct MCP probe:** all 4 stub tools callable without LLM
 - **LLM portability:** same MCP tool catalog passed to any OpenRouter model slug; client executes `call_tool` on LLM's `tool_calls` response
-- **Models tested:** default `openai/gpt-4o`, `openai/gpt-4o-mini` when `OPENROUTER_API_KEY` set; any slug via `--models`
+- **Models tested:** `openai/gpt-4o-mini`, `anthropic/claude-3-haiku` — PASS (2026-06-02); any slug via `--models`
 - **Cross-vendor:** compare `anthropic/claude-*`, `google/gemini-*` in one run — no separate API keys (D-11)
 
 Primary/fallback models: see D-9 in `DECISIONS.md`.
