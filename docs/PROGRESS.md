@@ -40,7 +40,18 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | Task | Description | Status |
 |------|-------------|--------|
 | **1.1** | FastAPI + `TicketingProvider` interface | **Complete** (2026-06-02) |
-| 1.2 | PostgreSQL schema + migrations | Not started |
+| 1.2 | PostgreSQL schema + migrations | **In progress** |
+
+### Task 1.2 sub-steps
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Base model (`DeclarativeBase` + `TimestampMixin`) + async session | **Complete** (2026-06-02) |
+| 2 | Restaurant + Branch + User | **Complete** (2026-06-02) |
+| 3 | Ticket cache + AI conversation | **Complete** (2026-06-02) |
+| 4 | KB article + version history | Not started |
+| 5 | Webhook event log + SLA config | Not started |
+| 6 | Alembic init + first migration | Not started |
 | 1.3 | `ChatwootAdapter` | Not started |
 | 1.4 | Webhook receiver + `StandardEvent` parser | Not started |
 | 1.5 | Redis cache + rate limiting | Not started |

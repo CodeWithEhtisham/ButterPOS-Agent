@@ -21,13 +21,17 @@ Coding standards, project layout, testing, and logging conventions.
 app/
   main.py                 # FastAPI factory (`create_app`)
   core/
-    config.py             # Settings from `.env`
-    context.py            # Request-scoped logging context
-    logging_config.py     # JSON structured logging
-    error_handlers.py     # Global exception handlers
-    exceptions.py         # AppError
-    pii/                  # PII mask/unmask (Task 1.1.7)
-    security.py           # JWT helpers
+    config.py
+    context.py
+    logging_config.py
+    error_handlers.py
+    exceptions.py
+    pii/
+    security.py
+  db/                     # SQLAlchemy ORM + async session (Task 1.2+)
+    base.py               # Base + TimestampMixin
+    session.py            # async engine + get_async_session()
+    models/               # ORM table classes (Task 1.2.2+)
   api/
     deps.py               # FastAPI dependencies
     middleware/           # Request logging middleware

@@ -9,7 +9,7 @@ import pytest
 from app.core.config import Settings, get_settings
 from app.core.error_handlers import register_exception_handlers
 from app.core.exceptions import AppError
-from app.core.logging_config import JsonLogFormatter, configure_logging
+from app.core.logging_config import JsonLogFormatter
 from app.main import create_app
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

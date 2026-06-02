@@ -12,12 +12,16 @@ from app.api.v1.router import api_v1_router
 from app.core.config import Settings, get_settings
 from app.core.error_handlers import register_exception_handlers
 from app.core.logging_config import configure_logging
+from app.db.session import init_engine, shutdown_engine
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    configure_logging(get_settings())
+    settings = get_settings()
+    configure_logging(settings)
+    init_engine(settings)
     yield
+    await shutdown_engine()
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
