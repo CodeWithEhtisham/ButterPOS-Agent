@@ -104,7 +104,9 @@ Inbound receiver: `POST /api/v1/webhooks/chatwoot` — HMAC-only (no JWT). Imple
 
 Idempotency: Postgres `webhook_event_log` with unique `idempotency_key` + SHA-256 `payload_hash` (Task 1.4.2).
 
-Task 1.4.3 adds Redis DLQ for failed processing.
+Processing: Celery `webhook.process` after accept; Redis DLQ + beat retry on failure (Task 1.4.3).
+
+Task 1.4.4 adds polling fallback for dropped webhooks.
 
 ---
 

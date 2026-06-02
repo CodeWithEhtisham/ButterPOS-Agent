@@ -116,6 +116,15 @@ Both return HTTP `200` — Chatwoot must not retry on duplicates.
 
 Event processing and DLQ: Task 1.4 sub-steps 3+.
 
+#### Processing pipeline (Task 1.4.3)
+
+| Component | Path |
+|-----------|------|
+| Dispatcher | `app/services/webhook_dispatch.py` → Celery `webhook.process` |
+| Processor stub | `app/services/webhook_processor.py` |
+| DLQ store | `app/worker/dlq.py` |
+| Celery tasks | `app/worker/tasks/webhook_tasks.py` |
+
 ---
 
 ## Request/response schemas

@@ -54,6 +54,9 @@ Configuration, credentials, and environment-specific settings.
 | `DATABASE_URL` | Step 0.5+ | SQLAlchemy URL, e.g. `postgresql+asyncpg://butterpos:butterpos@localhost:5432/butterpos` |
 | `REDIS_PORT` | Step 0.5 | Host port mapping (default: `6379`) |
 | `REDIS_URL` | Step 0.5+ | Redis URL, e.g. `redis://localhost:6379/0` |
+| `WEBHOOK_DLQ_REDIS_KEY` | Task 1.4.3 | DLQ sorted-set key (default `webhook:dlq:pending`) |
+| `WEBHOOK_DLQ_MAX_ATTEMPTS` | Task 1.4.3 | Total processing tries before exhaustion alert (default `3`) |
+| `WEBHOOK_DLQ_RETRY_INTERVAL_SECONDS` | Task 1.4.3 | Beat interval + retry delay (default `300`) |
 
 ### Application (Phase 1 — Task 1.1)
 
@@ -79,7 +82,15 @@ Settings class: `app/core/config.py` — loaded via `get_settings()`.
 
 Requires `REDIS_URL` for production reversible masking.
 
----
+### Webhook DLQ (Task 1.4.3)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `WEBHOOK_DLQ_REDIS_KEY` | Optional | Redis sorted-set for failed webhook retries |
+| `WEBHOOK_DLQ_MAX_ATTEMPTS` | Optional | Max processing attempts (default `3`) |
+| `WEBHOOK_DLQ_RETRY_INTERVAL_SECONDS` | Optional | Celery beat / retry delay in seconds (default `300`) |
+
+Requires `REDIS_URL` for Celery broker and DLQ. Run worker + beat per `DEPLOYMENT.md`.
 
 ## Credential locations
 

@@ -53,7 +53,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 |---|----------|--------|
 | 1 | POST endpoint — verify → parse → `StandardEvent` | **Complete** (2026-06-02) |
 | 2 | Idempotency + payload hashing | **Complete** (2026-06-02) |
-| 3 | Dead Letter Queue (Redis + Celery) | Not started |
+| 3 | Dead Letter Queue (Redis + Celery) | **Complete** (2026-06-02) |
 | 4 | Polling fallback (Celery beat) | Not started |
 
 ### Task 1.2 sub-steps

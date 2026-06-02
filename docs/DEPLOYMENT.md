@@ -109,6 +109,18 @@ Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 
 CI uses GitHub Actions service containers — same images as local `docker-compose.yml`.
 
+**Celery (Task 1.4.3):**
+
+```bash
+# Terminal 1 — task worker
+celery -A app.worker.celery_app worker -l info
+
+# Terminal 2 — DLQ retry beat (every WEBHOOK_DLQ_RETRY_INTERVAL_SECONDS)
+celery -A app.worker.celery_app beat -l info
+```
+
+Broker and DLQ both use `REDIS_URL`.
+
 **Not yet in CI (Phase 1+):** middleware app build, Alembic migrate, Chatwoot integration tests, coverage gate for mapping module.
 
 ---

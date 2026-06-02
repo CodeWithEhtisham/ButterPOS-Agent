@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import time
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.api.deps import ticketing_provider_dep
@@ -15,6 +15,8 @@ from app.main import create_app
 from app.models.standard import StandardEvent, StandardEventType
 from app.providers.ticketing.chatwoot.webhooks import compute_chatwoot_signature
 from app.providers.ticketing.factory import get_ticketing_provider
+from app.services.webhook_dispatch import NoOpWebhookDispatcher, clear_webhook_dispatcher_cache
+from app.worker.dlq import InMemoryWebhookDlqStore, clear_webhook_dlq_store_cache
 from fastapi.testclient import TestClient
 from tests.support.idempotency_memory_session import IdempotencyMemorySession, memory_webhook_session
 
@@ -37,7 +39,17 @@ def webhook_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
 
 
 @pytest.fixture
-def webhook_client(webhook_settings: Settings) -> TestClient:
+def webhook_client(webhook_settings: Settings, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+    clear_webhook_dispatcher_cache()
+    clear_webhook_dlq_store_cache()
+    monkeypatch.setattr(
+        "app.services.webhook_service.get_webhook_dispatcher",
+        lambda: NoOpWebhookDispatcher(),
+    )
+    monkeypatch.setattr(
+        "app.services.webhook_service.get_webhook_dlq_store",
+        lambda: InMemoryWebhookDlqStore(),
+    )
     shared_store = IdempotencyMemorySession()
 
     async def shared_memory_session():
@@ -150,15 +162,20 @@ def test_webhook_service_delegates_to_provider() -> None:
     app = create_app()
     app.dependency_overrides[ticketing_provider_dep] = lambda: provider
     app.dependency_overrides[get_async_session] = memory_webhook_session
+    clear_webhook_dispatcher_cache()
     body = b'{"event":"message_created","id":1,"created_at":"2026-03-04T10:30:00Z","conversation":{"id":2}}'
 
     try:
-        client = TestClient(app)
-        response = client.post(
-            "/api/v1/webhooks/chatwoot",
-            content=body,
-            headers={"Content-Type": "application/json"},
-        )
+        with patch(
+            "app.services.webhook_service.get_webhook_dispatcher",
+            lambda: NoOpWebhookDispatcher(),
+        ):
+            client = TestClient(app)
+            response = client.post(
+                "/api/v1/webhooks/chatwoot",
+                content=body,
+                headers={"Content-Type": "application/json"},
+            )
         assert response.status_code == 200
         provider.verify_webhook.assert_awaited_once()
         provider.parse_webhook.assert_awaited_once()

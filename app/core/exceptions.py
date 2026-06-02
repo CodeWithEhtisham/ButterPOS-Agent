@@ -20,3 +20,10 @@ class WebhookVerificationError(AppError):
 
     def __init__(self, message: str = "Invalid webhook signature") -> None:
         super().__init__(message, status_code=401)
+
+
+class WebhookProcessingError(AppError):
+    """Webhook accepted but downstream processing failed."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, status_code=500)

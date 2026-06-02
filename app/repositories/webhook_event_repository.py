@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Literal
 
 from sqlalchemy import select
@@ -18,6 +19,7 @@ from app.models.standard import StandardEvent
 logger = get_logger("app.webhooks")
 
 WebhookRecordStatus = Literal["received", "duplicate"]
+WebhookProcessingStatus = Literal["received", "processed", "failed", "duplicate"]
 
 
 @dataclass(frozen=True)
@@ -93,3 +95,34 @@ async def record_webhook_event(
         },
     )
     return WebhookRecordResult(status="received", idempotency_key=key, payload_hash=payload_hash)
+
+
+async def mark_webhook_processed(session: AsyncSession, idempotency_key: str) -> None:
+    """Set durable audit row to processed after successful handling."""
+    row = await session.scalar(
+        select(WebhookEventLog).where(WebhookEventLog.idempotency_key == idempotency_key)
+    )
+    if row is None:
+        logger.warning("webhook_mark_processed_missing idempotency_key=%s", idempotency_key)
+        return
+    row.status = "processed"
+    row.processed_at = datetime.now(tz=UTC)
+    row.error_message = None
+    await session.flush()
+
+
+async def mark_webhook_failed(
+    session: AsyncSession,
+    idempotency_key: str,
+    error_message: str,
+) -> None:
+    """Record processing failure on audit row before DLQ handoff."""
+    row = await session.scalar(
+        select(WebhookEventLog).where(WebhookEventLog.idempotency_key == idempotency_key)
+    )
+    if row is None:
+        logger.warning("webhook_mark_failed_missing idempotency_key=%s", idempotency_key)
+        return
+    row.status = "failed"
+    row.error_message = error_message
+    await session.flush()

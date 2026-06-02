@@ -54,3 +54,6 @@ Creating a conversation via Application API requires a `source_id` (unique per c
 | HTTP 404 on conversation | Wrong `account_id` or conversation deleted | Verify IDs in Chatwoot dashboard URL |
 | Presidio tries to download spaCy on startup | `en_core_web_lg` not installed | Run `python -m spacy download en_core_web_lg` or rely on regex fallback (automatic) |
 | PII tokens not unmasking | Redis TTL expired (24h) or wrong `REDIS_URL` | Verify Redis connectivity; tokens are ephemeral by design |
+| Webhook stuck in `failed` | Celery worker/beat not running | Start `celery worker` + `celery beat`; check Redis DLQ key |
+| `webhook_dlq_exhausted` in logs | Event failed 3 processing attempts | Inspect `webhook_event_log.error_message`; fix root cause; manual replay TBD |
+| Celery dispatch failed on ingest | Redis broker down at POST time | Event pushed to DLQ directly; start Redis + beat |

@@ -85,6 +85,20 @@ class Settings(BaseSettings):
     )
     pii_redis_key_prefix: str = "pii:token:"
 
+    # Webhook DLQ (Task 1.4.3)
+    webhook_dlq_redis_key: str = Field(
+        default="webhook:dlq:pending",
+        description="Redis sorted-set key for failed webhook retries",
+    )
+    webhook_dlq_max_attempts: int = Field(
+        default=3,
+        description="Total processing attempts before DLQ exhaustion alert",
+    )
+    webhook_dlq_retry_interval_seconds: int = Field(
+        default=300,
+        description="Seconds between DLQ retry sweeps (Celery beat schedule)",
+    )
+
     @field_validator("log_level", mode="before")
     @classmethod
     def normalize_log_level(cls, value: object) -> str:

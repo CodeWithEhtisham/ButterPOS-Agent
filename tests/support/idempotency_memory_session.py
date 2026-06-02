@@ -43,6 +43,8 @@ class IdempotencyMemorySession:
             key = self._last_conflict_key
             self._last_conflict_key = None
             return self._rows.get(key)
+        if len(self._rows) == 1:
+            return next(iter(self._rows.values()))
         return None
 
 

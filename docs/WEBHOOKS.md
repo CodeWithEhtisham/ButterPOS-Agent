@@ -11,8 +11,8 @@ Inbound webhook handling for the ticketing platform (Chatwoot).
 3. `ChatwootAdapter.parse_webhook()` maps payload → `StandardEvent`.
 4. Endpoint returns `200` with `status: accepted` or `status: duplicate` (**Task 1.4.2** — live).
 5. Idempotency row persisted in `webhook_event_log` (`received` on first delivery; replays skip insert).
-6. Process event (queue agent loop, invalidate cache) — later phases.
-7. Failures → DLQ (**Task 1.4.3**).
+6. Process event via Celery `webhook.process` (**Task 1.4.3** — live stub processor).
+7. Failures → Redis DLQ + beat retry (**Task 1.4.3**).
 
 ---
 
@@ -146,11 +146,34 @@ Duplicate events: ack `200`, skip processing.
 
 ## DLQ
 
-<!-- TBD Phase 1: Celery retry task. -->
+**Task 1.4.3** — failed processing → Redis sorted set → Celery beat retries.
 
-- Failed processing → Redis DLQ
-- Retry every 5 min, max 3 attempts
-- Alert after 3 failures
+| Item | Detail |
+|------|--------|
+| Redis key | `WEBHOOK_DLQ_REDIS_KEY` (default `webhook:dlq:pending`) |
+| Max attempts | `WEBHOOK_DLQ_MAX_ATTEMPTS` (default `3`) |
+| Retry interval | `WEBHOOK_DLQ_RETRY_INTERVAL_SECONDS` (default `300` = 5 min) |
+| Celery tasks | `webhook.process`, `webhook.retry_dlq` (beat) |
+| Alert | Structured log `alert_type=webhook_dlq_exhausted` after 3 failures |
+
+**Flow:**
+
+1. New webhook (`status=received`) → Celery `webhook.process` dispatched (HTTP returns `200` immediately).
+2. Processor succeeds → `webhook_event_log.status=processed`, `processed_at` set.
+3. Processor fails → `status=failed`, `error_message` set, entry pushed to Redis DLQ with `next_retry_at`.
+4. Celery beat (`webhook.retry_dlq`) every 5 min drains ready DLQ entries and re-dispatches `webhook.process`.
+5. After 3 total attempts → no further DLQ enqueue; `webhook_dlq_exhausted` error log for ops monitoring.
+
+If Celery broker is unreachable at dispatch time, the HTTP handler pushes directly to DLQ (same payload shape).
+
+**Run workers locally:**
+
+```bash
+celery -A app.worker.celery_app worker -l info
+celery -A app.worker.celery_app beat -l info
+```
+
+Requires `REDIS_URL` (broker + DLQ).
 
 ---
 

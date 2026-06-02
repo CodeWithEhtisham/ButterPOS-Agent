@@ -13,6 +13,7 @@ from app.repositories.webhook_event_repository import (
     compute_payload_hash,
     record_webhook_event,
 )
+from app.services.webhook_dispatch import NoOpWebhookDispatcher
 from app.services.webhook_service import WebhookService
 from sqlalchemy.exc import IntegrityError
 from tests.support.idempotency_memory_session import IdempotencyMemorySession
@@ -78,7 +79,7 @@ def test_webhook_service_returns_duplicate_status() -> None:
         provider.parse_webhook = AsyncMock(return_value=_event())
 
         session = IdempotencyMemorySession()
-        service = WebhookService(provider, session)
+        service = WebhookService(provider, session, dispatcher=NoOpWebhookDispatcher())
         body = b'{"event":"message_created","id":1}'
 
         first = await service.receive_chatwoot(body, {})
