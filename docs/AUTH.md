@@ -64,4 +64,60 @@ User/password login against Postgres users arrives with Task 1.2+; until then, c
 
 ## PII masking
 
-<!-- Task 1.1.7: Detect & mask phone, email, financial, ID, name before LLM; reversible via Redis (24h TTL). -->
+**Task 1.1.7** — Mandatory before **every** third-party LLM call (OpenRouter → OpenAI / Anthropic / Gemini). V1 does not run self-hosted models; customer PII must not reach paid providers in cleartext.
+
+### Why it matters
+
+Data routed through OpenRouter still leaves your infrastructure and may hit multiple vendors. Masking is load-bearing for compliance and customer trust until Ollama/self-hosted is evaluated post-V1 (D-6).
+
+### Flow
+
+1. **Before LLM:** `PIIMasker.mask(text)` or `mask_messages()` replaces detected entities with tokens like `[PII:EMAIL_ADDRESS:a1b2c3d4]`.
+2. **Redis map:** `pii:token:{id}` → original value, TTL **24 hours** (`PII_TOKEN_TTL_SECONDS=86400`).
+3. **After LLM:** `PIIMasker.unmask(response)` restores originals for display to staff / Chatwoot public reply.
+4. **Never log** cleartext PII or Redis token values.
+
+### Detected entity types
+
+| Type | Examples |
+|------|----------|
+| `PHONE_NUMBER` | `0301-1234567`, international formats |
+| `EMAIL_ADDRESS` | `user@domain.com` |
+| `CREDIT_CARD` | 13–16 digit card numbers |
+| `IBAN_CODE` | Bank IBANs |
+| `US_SSN` | `123-45-6789` |
+| `PERSON` | Capitalized multi-word names (regex baseline) |
+| + Presidio types when spaCy model installed | `NATIONAL_ID`, `US_PASSPORT`, etc. |
+
+Detection: **regex baseline** (always on) with optional **Presidio** enrichment when spaCy is available (`build_pii_detector()`).
+
+### Usage (agent loop — Phase 2)
+
+```python
+from app.api.deps import pii_masker_dep
+
+masker = pii_masker_dep()
+masked_msgs, _ = await masker.mask_messages(conversation_messages)
+# ... call LLMProvider with masked_msgs ...
+reply = await masker.unmask(llm_response.content)
+```
+
+Implementation: `app/core/pii/masker.py`, `app/core/pii/store.py`, `app/core/pii/detector.py`.
+
+### Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REDIS_URL` | — | Required for production token store |
+| `PII_TOKEN_TTL_SECONDS` | `86400` | Mask token TTL (24h) |
+| `PII_REDIS_KEY_PREFIX` | `pii:token:` | Redis key prefix |
+
+### Optional: Presidio + spaCy
+
+For stronger name/ID detection in production:
+
+```bash
+python -m spacy download en_core_web_lg
+```
+
+If spaCy is missing, the service falls back to regex patterns automatically.

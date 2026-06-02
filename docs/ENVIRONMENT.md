@@ -67,6 +67,15 @@ Configuration, credentials, and environment-specific settings.
 
 Settings class: `app/core/config.py` — loaded via `get_settings()`.
 
+### PII masking (Task 1.1.7)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PII_TOKEN_TTL_SECONDS` | Optional | Redis TTL for mask tokens (default: `86400` = 24h) |
+| `PII_REDIS_KEY_PREFIX` | Optional | Redis key prefix (default: `pii:token:`) |
+
+Requires `REDIS_URL` for production reversible masking.
+
 ---
 
 ## Credential locations

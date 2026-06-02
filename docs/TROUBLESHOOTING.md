@@ -52,3 +52,5 @@ Creating a conversation via Application API requires a `source_id` (unique per c
 | `docker compose` port bind failed | Host ports 5432/6379 already in use | Use `POSTGRES_PORT=15432` `REDIS_PORT=16379` and update URLs in `.env` |
 | HTTP 401 from Chatwoot | Invalid or expired API token | Regenerate token in Chatwoot Profile → Access Token |
 | HTTP 404 on conversation | Wrong `account_id` or conversation deleted | Verify IDs in Chatwoot dashboard URL |
+| Presidio tries to download spaCy on startup | `en_core_web_lg` not installed | Run `python -m spacy download en_core_web_lg` or rely on regex fallback (automatic) |
+| PII tokens not unmasking | Redis TTL expired (24h) or wrong `REDIS_URL` | Verify Redis connectivity; tokens are ephemeral by design |

@@ -66,6 +66,13 @@ class Settings(BaseSettings):
     api_client_id: str = "butterpos-widget"
     api_client_secret: str = ""
 
+    # PII masking (Task 1.1.7 — mandatory before LLM calls)
+    pii_token_ttl_seconds: int = Field(
+        default=86400,
+        description="Redis TTL for reversible PII mask tokens (24h)",
+    )
+    pii_redis_key_prefix: str = "pii:token:"
+
     @field_validator("log_level", mode="before")
     @classmethod
     def normalize_log_level(cls, value: object) -> str:

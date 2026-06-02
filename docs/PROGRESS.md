@@ -57,7 +57,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 4 | `TicketingProvider` interface (11 methods) | **Complete** (2026-06-02) |
 | 5 | Standard models (`StandardEvent`, etc.) | **Complete** (2026-06-02) |
 | 6 | Provider factory | **Complete** (2026-06-02) |
-| 7 | PII masking / de-masking | Not started |
+| 7 | PII masking / de-masking | **Complete** (2026-06-02) |
 | 8 | Structured logging + global exception handler | Not started |
 
 **Phase 1 exit criteria:**

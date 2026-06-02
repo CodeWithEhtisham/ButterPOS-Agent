@@ -72,7 +72,8 @@ Abstract interface in `app/providers/ticketing/base.py` — **11 async methods**
 
 ## Caching strategy
 
-<!-- Task 1.5: Ticket cache (60s TTL), contact cache (24h), webhook-driven invalidation. -->
+- **Ticket/contact cache** — Task 1.5 (60s / 24h TTL).
+- **PII token map** — Task 1.1.7: Redis `pii:token:{id}` → original value, **24h TTL**. Used to unmask LLM responses. Invalid/expired tokens remain as placeholders in text.
 
 ---
 
