@@ -42,7 +42,7 @@ Configuration: `app/core/config.py` (`Settings` via pydantic-settings).
 
 ### TicketingProvider (Task 1.1.4)
 
-Abstract interface in `app/providers/ticketing/base.py` — **11 async methods**:
+Abstract interface in `app/providers/ticketing/base.py` — **12 async methods**:
 
 | Method | Purpose |
 |--------|---------|
@@ -57,14 +57,15 @@ Abstract interface in `app/providers/ticketing/base.py` — **11 async methods**
 | `verify_webhook` | HMAC / signature check |
 | `parse_webhook` | Payload → `StandardEvent` |
 | `health_check` | Platform API probe |
+| `list_tickets_updated_since` | Polling fallback — conversations updated after timestamp |
 
-`ChatwootAdapter` implements this in Task 1.3. Factory in Task 1.1.6.
+`ChatwootAdapter` implements all methods (Task 1.3). Factory wraps with dedup + cache (Task 1.5).
 
-### Provider factory (Task 1.1.6)
+### Provider factory (Task 1.1.6 + 1.5)
 
 - Env: `TICKETING_PROVIDER` (default `chatwoot`)
 - Module: `app/providers/ticketing/factory.py`
-- Registry maps provider name → builder; lazy import keeps core decoupled
+- **Chain:** `ChatwootAdapter` → `DedupingTicketingProvider` → `CachingTicketingProvider`
 - FastAPI: `ticketing_provider_dep()` in `app/api/deps.py`
 - Adding Zoho: implement `ZohoAdapter`, register in `_REGISTRY` — zero core changes
 
@@ -110,6 +111,40 @@ Postgres `webhook_event_log` remains the durable audit trail; Redis hot dedup is
 **Task 1.5.3** — `InboundPiiService` masks incoming `message_body` in `process_webhook_event()` before agent/LLM paths. Tokens stored in Redis (`pii:token:{id}`) via Task 1.1.7 `PIIMasker`.
 
 - **PII token map** — Task 1.1.7: Redis `pii:token:{id}` → original value, **24h TTL**. Used to unmask LLM responses. Invalid/expired tokens remain as placeholders in text.
+
+---
+
+## Customer / branch mapping
+
+**Task 1.6** — `CustomerMappingService` resolves ButterPOS users and Chatwoot contacts to restaurant, branch, plan, and SLA context.
+
+| Entry | Method |
+|-------|--------|
+| `butterpos_user_id` | `resolve_by_user_id()` |
+| `provider_contact_id` | `resolve_by_contact_id()` |
+
+Chain: `users` → `branches` → `restaurants` → `sla_config` (by `plan_type`). Evaluates `payment_due`, plan expiry, and branch timezone coverage windows.
+
+Edge cases (`unknown_user`, `no_branch`, `payment_due`, `outside_coverage`, etc.): **D-15** in `DECISIONS.md`. **100% test coverage** required on mapping modules — see `DEV_GUIDELINES.md`.
+
+Data loaded via Task 1.7 seed scripts; validated with `scripts/validate_seed.py`.
+
+---
+
+## Middleware readiness
+
+**Task 1.8.1** — `GET /api/v1/system/health` probes Postgres (`SELECT 1`) and Redis (`PING`). Returns HTTP **503** when degraded.
+
+Operational validation scripts (Phase 1 exit):
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/check_infra.py` | Direct Postgres + Redis connectivity |
+| `scripts/smoke_middleware.py` | OpenAPI, health, JWT auth against running app |
+| `scripts/validate_chatwoot.py` | Live `ChatwootAdapter` round-trip |
+| `scripts/seed_data.py` / `scripts/validate_seed.py` | Tenant data load + mapping checks |
+
+See `DEPLOYMENT.md` § Phase 1 verification.
 
 ---
 

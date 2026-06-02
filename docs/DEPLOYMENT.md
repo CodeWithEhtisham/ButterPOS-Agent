@@ -97,17 +97,26 @@ Initial revision `20260602_0001` creates all nine middleware tables. App runtime
 
 ## CI/CD
 
-Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — **currently commented out** in repo; re-enable before production CI gate.
 
-**Triggers:** push/PR to `main`, `staging`, `phase-0`
+**Intended triggers:** push/PR to `main`, `staging`, `phase-0`
 
-**Job steps:**
+**Intended job steps:**
 
-1. **Lint** — `ruff check spikes/ scripts/ tests/`
-2. **Test** — `pytest tests/` (structure smoke + optional connectivity if env set)
-3. **Infra check** — `python scripts/check_infra.py` against CI service containers (Postgres 15 + Redis 7)
+1. **Lint** — `ruff check app/ tests/ spikes/ scripts/`
+2. **Test** — `pytest tests/`
+3. **Infra check** — `python scripts/check_infra.py` against service containers (Postgres 15 + Redis 7)
 
-CI uses GitHub Actions service containers — same images as local `docker-compose.yml`.
+**Phase 1 local gates (manual until CI re-enabled):**
+
+| Gate | Command |
+|------|---------|
+| Unit + integration tests | `pytest tests/ -q` |
+| Mapping 100% coverage | See `DEV_GUIDELINES.md` |
+| Infra | `python scripts/check_infra.py` |
+| Middleware smoke | `python scripts/smoke_middleware.py` |
+| Chatwoot live | `python scripts/validate_chatwoot.py` |
+| Seed validation | `python scripts/validate_seed.py` |
 
 **Celery (Task 1.4.3):**
 
@@ -123,7 +132,25 @@ Beat schedules: `webhook.retry_dlq` (5 min), `ticket.poll_reconcile` (10 min).
 
 Broker and DLQ both use `REDIS_URL`.
 
-**Not yet in CI (Phase 1+):** middleware app build, Alembic migrate, Chatwoot integration tests, coverage gate for mapping module.
+---
+
+## Phase 1 verification checklist (Task 1.8)
+
+Complete locally before Phase 2. All scripts assume repo root and loaded `.env`.
+
+| Step | Command | Pass criteria |
+|------|---------|---------------|
+| 1 | `python scripts/check_infra.py` | Postgres + Redis OK |
+| 2 | `alembic upgrade head` | Migrations applied |
+| 3 | `python scripts/seed_data.py --input scripts/fixtures/sample_tenant_export.json` | Upsert completes |
+| 4 | `python scripts/validate_seed.py` | `RESULT: PASS` |
+| 5 | `uvicorn app.main:app --port 8000` | Server starts |
+| 6 | `python scripts/smoke_middleware.py` | `RESULT: PASS` |
+| 7 | `python scripts/validate_chatwoot.py --middleware-url http://127.0.0.1:8000` | `RESULT: PASS` |
+| 8 | `pytest tests/ -q` | All tests pass |
+| 9 | Mapping coverage gate | 100% on mapping modules (see `DEV_GUIDELINES.md`) |
+
+**Signed off (local demo):** 2026-06-02 — steps 1–8 PASS on developer machine. Production tenant export and CI re-enable remain open.
 
 ---
 
@@ -196,6 +223,65 @@ python scripts/validate_seed.py --json   # machine-readable report
 **Signed off (demo):** automated validation PASS against `scripts/fixtures/sample_tenant_export.json` on local Postgres (2026-06-02).
 
 **Production gate:** repeat seed + `validate_seed.py` when ButterPOS delivers production export; extend `DEMO_USER_EXPECTATIONS` in `tenant_validation_service.py` or add a production expectations file.
+
+---
+
+## Running the middleware (Task 1.8.1)
+
+### Start dependencies
+
+Postgres and Redis must be reachable (`DATABASE_URL`, `REDIS_URL` in `.env`). If using Docker for infra and port 5432 is free:
+
+```bash
+docker compose up -d
+alembic upgrade head
+```
+
+If port 5432 is already in use (system Postgres), point `DATABASE_URL` at that instance instead.
+
+### Start the app
+
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+OpenAPI: `http://127.0.0.1:8000/docs`
+
+### Smoke test
+
+With the app running:
+
+```bash
+python scripts/smoke_middleware.py
+python scripts/smoke_middleware.py --base-url http://127.0.0.1:8000 --skip-infra
+```
+
+**Expected:** `RESULT: PASS` — infra (optional), `/openapi.json`, `/api/v1/system/health`, JWT token + `/auth/me`.
+
+| Check | Meaning |
+|-------|---------|
+| `system_health` | Postgres + Redis wired through FastAPI lifespan |
+| `auth_token` / `auth_me` | JWT auth path works |
+
+### ChatwootAdapter live validation (Task 1.8.2)
+
+Requires local Chatwoot running with `CHATWOOT_*` vars in `.env`.
+
+```bash
+python scripts/validate_chatwoot.py
+python scripts/validate_chatwoot.py --middleware-url http://127.0.0.1:8000
+python scripts/validate_chatwoot.py --json
+```
+
+**Expected:** `RESULT: PASS` — adapter `health_check`, contact, ticket CRUD, comment, note, tags, status update. Optional `assign_agent` when `CHATWOOT_AGENT_ID` is set. With `--middleware-url`, also probes `GET /api/v1/system/ticketing-health` through the factory stack.
+
+| Check | Meaning |
+|-------|---------|
+| `health_check` | Direct Chatwoot Application API probe |
+| `create_ticket` … `update_status` | Full `TicketingProvider` round-trip |
+| `middleware_ticketing_health` | Adapter wired through FastAPI + JWT |
+
+Creates a test contact/conversation in Chatwoot (safe to delete manually).
 
 ---
 

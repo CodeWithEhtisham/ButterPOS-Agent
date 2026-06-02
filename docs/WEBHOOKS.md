@@ -151,7 +151,7 @@ Duplicate events: ack `200`, skip processing.
 
 | Scope | Default limit | Window | Redis key prefix | Key source |
 |-------|---------------|--------|------------------|------------|
-| User | 20 messages | 1 hour | `ratelimit:user:` | Chatwoot contact id (`sender_provider_contact_id`) until Task 1.6 maps ButterPOS user ids |
+| User | 20 messages | 1 hour | `ratelimit:user:` | Chatwoot contact id (`sender_provider_contact_id`) |
 | Restaurant | 100 messages | 24 hours | `ratelimit:restaurant:` | `conversation.custom_attributes.restaurant_id` or `butterpos_restaurant_id`; skipped if absent |
 
 **Flow:**

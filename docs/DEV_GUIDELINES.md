@@ -78,6 +78,27 @@ ruff check app/ tests/ spikes/ scripts/
 
 Use `get_settings.cache_clear()` in tests when overriding env vars for the cached singleton.
 
+### Phase 1 verification (local)
+
+```bash
+python scripts/check_infra.py
+alembic upgrade head
+python scripts/seed_data.py --input scripts/fixtures/sample_tenant_export.json
+python scripts/validate_seed.py
+
+uvicorn app.main:app --host 127.0.0.1 --port 8000   # separate terminal
+python scripts/smoke_middleware.py
+python scripts/validate_chatwoot.py --middleware-url http://127.0.0.1:8000
+```
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/check_infra.py` | Postgres + Redis connectivity |
+| `scripts/smoke_middleware.py` | Running app + JWT |
+| `scripts/validate_chatwoot.py` | Live Chatwoot adapter |
+| `scripts/seed_data.py` | Tenant export load |
+| `scripts/validate_seed.py` | Post-seed mapping checks |
+
 ---
 
 ## Coverage rules

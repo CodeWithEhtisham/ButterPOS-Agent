@@ -14,6 +14,7 @@ Configuration, credentials, and environment-specific settings.
 | `CHATWOOT_API_TOKEN` | Step 0.1+ | Agent API access token (Profile → Access Token) |
 | `CHATWOOT_ACCOUNT_ID` | Step 0.1+ | Numeric account ID |
 | `CHATWOOT_INBOX_ID` | Step 0.1+ | API-channel inbox ID |
+| `CHATWOOT_AGENT_ID` | Optional | Agent user id for live `assign_agent` validation (Task 1.8.2) |
 | `CHATWOOT_WEBHOOK_SECRET` | Phase 1 | HMAC secret for inbound webhook verification |
 | `CHATWOOT_WEBHOOK_MAX_AGE_SECONDS` | Optional | Replay window for webhook timestamps (default `300`) |
 | `CHATWOOT_REQUEST_TIMEOUT_SECONDS` | Optional | HTTP timeout for Chatwoot API (default `30`) |
@@ -137,6 +138,14 @@ Requires `REDIS_URL` for production rate limiting. Outgoing messages and non-`me
 | `WEBHOOK_HOT_DEDUP_REDIS_PREFIX` | Optional | Redis hot-path prefix for webhook idempotency (default `dedup:webhook:`) |
 | `WEBHOOK_HOT_DEDUP_TTL_SECONDS` | Optional | Hot webhook dedup TTL (default `86400`) |
 
+### Local validation (Task 1.8)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MIDDLEWARE_BASE_URL` | Optional | Base URL for smoke/Chatwoot scripts (default `http://127.0.0.1:8000`) |
+| `CHATWOOT_AGENT_ID` | Optional | Include `assign_agent` in `validate_chatwoot.py` |
+| `BUTTERPOS_DATA_EXPORT` | Production seed | Path to signed-off tenant export JSON/CSV |
+
 ## Credential locations
 
 | Credential | Assumption | Where to obtain | Storage |
@@ -169,10 +178,21 @@ Never commit secrets. Reference by env var name only in docs and code.
 
 ## Validation
 
-Re-run assumption checks after updating credentials:
+### Assumption checks (Phase 0)
 
 ```bash
 python spikes/0.4_assumption_validation/verify_assumptions.py
 ```
 
 Reports saved to `spikes/0.4_assumption_validation/results/`.
+
+### Phase 1 exit scripts
+
+```bash
+python scripts/check_infra.py
+python scripts/smoke_middleware.py
+python scripts/validate_chatwoot.py
+python scripts/validate_seed.py
+```
+
+See `DEPLOYMENT.md` § Phase 1 verification checklist.

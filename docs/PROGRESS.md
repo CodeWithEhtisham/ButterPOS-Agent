@@ -2,7 +2,7 @@
 
 Running record of completed steps. Phases are sequential — Phase 1 does not start until Phase 0 is confirmed complete here.
 
-**Last updated:** 2026-06-02
+**Last updated:** 2026-06-02 (Task 1.8.3 — Phase 1 complete)
 
 ---
 
@@ -46,6 +46,15 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | **1.5** | Redis cache + rate limiting | **Complete** (2026-06-02) |
 | **1.6** | Customer/Branch mapping + unit tests (100% coverage) | **Complete** (2026-06-02) |
 | **1.7** | Data seeding + validation | **Complete** (2026-06-02) |
+| **1.8** | Phase 1 exit validation | **Complete** (2026-06-02) |
+
+### Task 1.8 sub-steps (Phase 1 exit criteria)
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | Middleware runs — health endpoint + smoke test | **Complete** (2026-06-02) |
+| 2 | `ChatwootAdapter` live integration | **Complete** (2026-06-02) |
+| 3 | Doc sweep | **Complete** (2026-06-02) |
 
 ### Task 1.7 sub-steps
 
@@ -108,7 +117,7 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 1 | Project structure + config (`pydantic-settings`) | **Complete** (2026-06-02) |
 | 2 | JWT authentication | **Complete** (2026-06-02) |
 | 3 | API versioning (`/api/v1/`) | **Complete** (2026-06-02) — router wired with auth routes |
-| 4 | `TicketingProvider` interface (11 methods) | **Complete** (2026-06-02) |
+| 4 | `TicketingProvider` interface (12 methods) | **Complete** (2026-06-02) |
 | 5 | Standard models (`StandardEvent`, etc.) | **Complete** (2026-06-02) |
 | 6 | Provider factory | **Complete** (2026-06-02) |
 | 7 | PII masking / de-masking | **Complete** (2026-06-02) |
@@ -116,10 +125,18 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 
 **Phase 1 exit criteria:**
 
-- [ ] Middleware runs
-- [ ] `ChatwootAdapter` passes against local Chatwoot
+- [x] Middleware runs (`smoke_middleware.py` PASS 2026-06-02)
+- [x] `ChatwootAdapter` passes against local Chatwoot (`validate_chatwoot.py` PASS 2026-06-02)
 - [x] Webhooks ingest idempotently with DLQ + polling
 - [x] Caching + rate limits live
 - [x] Mapping at 100% coverage
 - [x] Data seeded and jointly validated (demo fixture — `validate_seed.py` PASS 2026-06-02; production export pending)
-- [ ] Every doc current
+- [x] Every doc current (Task 1.8.3 sweep 2026-06-02)
+
+**Phase 1 → Phase 2 gate:** **Ready for Team Lead confirmation** — all Phase 1 tasks and exit criteria met on local demo stack. Open items that do **not** block Phase 2 start: production tenant export sign-off, CI workflow re-enable, D-9 formal live LLM eval, A1–A3 production credentials.
+
+---
+
+## Phase 2 — Agent loop *(not started)*
+
+<!-- Phase 2 tasks begin after Team Lead confirms Phase 1 complete above. -->

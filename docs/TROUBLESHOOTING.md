@@ -8,7 +8,7 @@ Known issues, platform quirks, and recurring failures with fixes.
 
 | Issue | Status | Notes |
 |-------|--------|-------|
-| Step 0.1 live spike not run | **Blocked** | Requires Chatwoot credentials in `.env` — see `spikes/0.1_chat_surface/README.md` |
+| Step 0.1 live spike | **Superseded** | Use `python scripts/validate_chatwoot.py` for live adapter checks (Task 1.8.2) |
 
 ---
 
@@ -58,3 +58,9 @@ Creating a conversation via Application API requires a `source_id` (unique per c
 | `webhook_dlq_exhausted` in logs | Event failed 3 processing attempts | Inspect `webhook_event_log.error_message`; fix root cause; manual replay TBD |
 | Celery dispatch failed on ingest | Redis broker down at POST time | Event pushed to DLQ directly; start Redis + beat |
 | `ticket_cache` stale vs Chatwoot | Webhook missed; polling not running | Ensure Celery beat + worker running; check poll cursor key in Redis |
+| `docker compose` postgres fails: port 5432 in use | System Postgres already bound | Use existing Postgres — set `DATABASE_URL` accordingly — or set `POSTGRES_PORT=15432` |
+| `smoke_middleware.py` connect refused | Uvicorn not running | Start `uvicorn app.main:app --port 8000` |
+| `system_health` HTTP 503 | Postgres or Redis unreachable | Run `python scripts/check_infra.py`; verify `DATABASE_URL` / `REDIS_URL` |
+| `validate_chatwoot.py` FAIL on health | Chatwoot down or bad token | Confirm `CHATWOOT_BASE_URL` reachable; regenerate API token |
+| `validate_seed.py` FAIL mapping | Seed not applied or fixture mismatch | Run `seed_data.py` then re-validate; check `tenant_validation_service.py` expectations |
+| `ModuleNotFoundError: app` running scripts | Wrong cwd | Run from repo root; scripts prepend project root to `sys.path` |

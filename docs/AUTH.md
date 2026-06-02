@@ -186,7 +186,7 @@ If spaCy is missing, the service falls back to regex patterns automatically.
 
 | Scope | Limit | Identity |
 |-------|-------|----------|
-| User | 20 incoming messages / hour | Chatwoot contact id until Task 1.6 customer mapping |
+| User | 20 incoming messages / hour | Chatwoot contact id (`sender_provider_contact_id`) |
 | Restaurant | 100 incoming messages / day | `restaurant_id` or `butterpos_restaurant_id` on conversation `custom_attributes` |
 
 - Only **incoming** `message_created` events count.

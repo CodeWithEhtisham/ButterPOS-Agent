@@ -329,7 +329,7 @@ ORM models: `app/db/models/webhook_event_log.py`, `app/db/models/sla_config.py`.
 
 **Application:** Branch `timezone` (Task 1.2.2) defines *when* the coverage window applies; `sla_config` defines *how long* targets are per plan. Task 1.6 mapping loads restaurant → `plan_type` → SLA row.
 
-Seed data for `sla_config` rows is deferred to Task 1.7 (requires business sign-off on targets).
+Seed data: demo fixture in `scripts/fixtures/sample_tenant_export.json`; load with `scripts/seed_data.py`. Validate with `scripts/validate_seed.py`. Production export sign-off pending ButterPOS team.
 
 ---
 

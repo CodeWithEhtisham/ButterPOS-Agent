@@ -14,6 +14,16 @@ REST API contract for the ButterPOS AI Support Agent middleware. All endpoints l
 
 ## Endpoints
 
+### Summary
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/api/v1/auth/token` | Client credentials | Issue JWT |
+| `GET` | `/api/v1/auth/me` | Bearer JWT | Current subject |
+| `GET` | `/api/v1/system/health` | None | Postgres + Redis readiness |
+| `GET` | `/api/v1/system/ticketing-health` | Bearer JWT | Chatwoot adapter probe |
+| `POST` | `/api/v1/webhooks/chatwoot` | HMAC | Inbound Chatwoot webhook |
+
 ### Auth (Task 1.1.2)
 
 | Method | Path | Auth | Description |
@@ -58,6 +68,26 @@ REST API contract for the ButterPOS AI Support Agent middleware. All endpoints l
 ```
 
 **Errors:** `401` missing, invalid, or expired token
+
+#### `GET /api/v1/system/health`
+
+**Auth:** None — readiness probe for load balancers and smoke tests.
+
+**Response `200`:** `SystemHealthResponse` when Postgres and Redis are reachable.
+
+**Response `503`:** Same shape when any component is unhealthy (`healthy: false`).
+
+```json
+{
+  "healthy": true,
+  "app": "ButterPOS Support Agent",
+  "version": "0.1.0",
+  "components": [
+    {"name": "postgres", "healthy": true, "message": null},
+    {"name": "redis", "healthy": true, "message": null}
+  ]
+}
+```
 
 #### `GET /api/v1/system/ticketing-health`
 
@@ -161,6 +191,8 @@ Pydantic models: `app/schemas/auth.py`
 | `TokenResponse` | Token issuance output |
 | `AuthenticatedSubject` | Resolved JWT subject |
 | `ErrorResponse` | Standard error body |
+| `SystemHealthResponse` | Middleware readiness (`/system/health`) |
+| `ComponentHealth` | Single dependency in readiness probe |
 
 ---
 
