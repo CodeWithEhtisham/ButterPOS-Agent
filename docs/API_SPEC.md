@@ -65,6 +65,43 @@ REST API contract for the ButterPOS AI Support Agent middleware. All endpoints l
 
 **Response `200`:** `ProviderHealth` — live Chatwoot probe (`GET /api`) via `ChatwootAdapter.health_check()`; includes `latency_ms` when healthy.
 
+### Webhooks (Task 1.4)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/api/v1/webhooks/chatwoot` | HMAC (`X-Chatwoot-Signature`) | Receive Chatwoot account webhook |
+
+#### `POST /api/v1/webhooks/chatwoot`
+
+**Auth:** No JWT. Chatwoot signs the raw body with `CHATWOOT_WEBHOOK_SECRET`. See `WEBHOOKS.md`.
+
+**Headers (required):**
+
+| Header | Purpose |
+|--------|---------|
+| `X-Chatwoot-Signature` | `sha256=HMAC-SHA256(secret, "{timestamp}.{raw_body}")` |
+| `X-Chatwoot-Timestamp` | Unix seconds — replay window enforced |
+
+**Body:** Raw JSON bytes from Chatwoot (do not re-serialize before verify).
+
+**Response `200`:**
+
+```json
+{
+  "status": "accepted",
+  "event_type": "message_created",
+  "provider_event_id": "12345",
+  "provider_ticket_id": "5678",
+  "idempotency_key": "message_created:12345"
+}
+```
+
+**Errors:** `401` invalid/missing signature · `400` malformed payload
+
+**Implementation:** `app/api/v1/webhooks.py` → `WebhookService.receive_chatwoot()` → `TicketingProvider.verify_webhook()` / `parse_webhook()`.
+
+Idempotency persistence and event processing: Task 1.4 sub-steps 2+.
+
 ---
 
 ## Request/response schemas

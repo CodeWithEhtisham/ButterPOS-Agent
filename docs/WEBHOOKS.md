@@ -6,12 +6,13 @@ Inbound webhook handling for the ticketing platform (Chatwoot).
 
 ## Inbound lifecycle
 
-1. Chatwoot POSTs JSON to middleware webhook URL (`POST /api/v1/webhooks/chatwoot` — Phase 1).
-2. `ChatwootAdapter.verify_webhook()` validates HMAC signature.
+1. Chatwoot POSTs JSON to `POST /api/v1/webhooks/chatwoot` (**Task 1.4.1** — live).
+2. `WebhookService` reads **raw body bytes** and calls `ChatwootAdapter.verify_webhook()`.
 3. `ChatwootAdapter.parse_webhook()` maps payload → `StandardEvent`.
-4. Idempotency check (unique key + payload hash) — skip duplicates.
-5. Process event (queue agent loop, invalidate cache).
-6. Return `200 OK` quickly; failures go to DLQ (Phase 1).
+4. Endpoint returns `200` with `status: accepted` (processing queue — sub-step 2+).
+5. Idempotency check (unique key + payload hash) — skip duplicates (**Task 1.4.2**).
+6. Process event (queue agent loop, invalidate cache) — later phases.
+7. Failures → DLQ (**Task 1.4.3**).
 
 ---
 

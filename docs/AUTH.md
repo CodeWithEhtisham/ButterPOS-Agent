@@ -100,7 +100,9 @@ Verify: `GET /api/v1/system/ticketing-health` (JWT required) or adapter `health_
 
 Registration: `ChatwootAdapter.register_webhook(callback_url)` → save returned `secret` to `.env`. See `WEBHOOKS.md`.
 
-Task 1.4 wires verification into `POST /api/v1/webhooks/chatwoot`.
+Inbound receiver: `POST /api/v1/webhooks/chatwoot` — HMAC-only (no JWT). Implemented Task 1.4.1.
+
+Task 1.4.2 adds idempotency persistence to `webhook_event_log`.
 
 ---
 

@@ -42,6 +42,19 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | **1.1** | FastAPI + `TicketingProvider` interface | **Complete** (2026-06-02) |
 | **1.2** | PostgreSQL schema + migrations | **Complete** (2026-06-02) |
 | **1.3** | `ChatwootAdapter` | **Complete** (2026-06-02) |
+| **1.4** | Webhook receiver + `StandardEvent` parser | **In progress** |
+| **1.5** | Redis cache + rate limiting | Not started |
+| **1.6** | Customer/Branch mapping + unit tests (100% coverage) | Not started |
+| **1.7** | Data seeding + validation | Not started |
+
+### Task 1.4 sub-steps
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | POST endpoint — verify → parse → `StandardEvent` | **Complete** (2026-06-02) |
+| 2 | Idempotency + payload hashing | Not started |
+| 3 | Dead Letter Queue (Redis + Celery) | Not started |
+| 4 | Polling fallback (Celery beat) | Not started |
 
 ### Task 1.2 sub-steps
 
@@ -65,10 +78,6 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 | 5 | `assign_agent()` + `add_tags()` | **Complete** (2026-06-02) |
 | 6 | `get_or_create_contact()` | **Complete** (2026-06-02) |
 | 7 | Webhook HMAC verification + registration | **Complete** (2026-06-02) |
-| 1.4 | Webhook receiver + `StandardEvent` parser | Not started |
-| 1.5 | Redis cache + rate limiting | Not started |
-| 1.6 | Customer/Branch mapping + unit tests (100% coverage) | Not started |
-| 1.7 | Data seeding + validation | Not started |
 
 ### Task 1.1 sub-steps
 
