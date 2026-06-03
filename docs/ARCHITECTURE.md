@@ -150,4 +150,15 @@ See `DEPLOYMENT.md` § Phase 1 verification.
 
 ## Agent loop
 
-<!-- Phase 2: Playbook selection, tiered authorization, tool routing, escalation. -->
+**Phase 2.1** — two chat ingress paths share `AgentService` + remote MCP:
+
+| Path | Trigger | History store | Reply channel |
+|------|---------|---------------|---------------|
+| Widget | `POST /api/v1/chat/messages` (JWT) | `chat_sessions` | HTTP response; after escalation poll `GET /sessions/{id}` for human replies |
+| Inbound webhook | Chatwoot `message_created` (Celery) | `ai_conversations` | `add_comment()` on same ticket |
+
+**Escalated widget bridge (2.1.3):** customer messages → Chatwoot incoming API; human replies → webhook relay → `chat_sessions` → widget poll.
+
+Both paths PII-mask before LLM calls. Escalation creates or handoffs Chatwoot tickets with full transcript in a private note.
+
+<!-- Phase 2.2+: Playbook selection, tiered authorization, KB RAG. -->

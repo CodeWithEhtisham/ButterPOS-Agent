@@ -12,6 +12,10 @@
       <h1>ButterPOS Chat Test</h1>
       <p class="subtitle">Port 8000 · JWT + OpenRouter + MCP POS tools</p>
       <div id="status" class="status">Checking…</div>
+      <div id="human-active-banner" class="human-active-banner hidden" role="status">
+        <span class="human-active-dot" aria-hidden="true"></span>
+        <span>Human support agent is active</span>
+      </div>
     </header>
 
     <section id="login-panel" class="login-panel hidden">
@@ -20,6 +24,7 @@
       <label>Client Secret <input id="client-secret" type="password" autocomplete="current-password" /></label>
       <label>Subject <input id="subject" type="text" value="demo-staff" /></label>
       <button type="button" id="login-btn">Get token</button>
+      <button type="button" id="logout-btn" class="secondary hidden">Sign out</button>
     </section>
 
     <main id="messages" class="messages" aria-live="polite"></main>

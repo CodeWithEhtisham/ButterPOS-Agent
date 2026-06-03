@@ -60,7 +60,10 @@ Creating a conversation via Application API requires a `source_id` (unique per c
 | `ticket_cache` stale vs Chatwoot | Webhook missed; polling not running | Ensure Celery beat + worker running; check poll cursor key in Redis |
 | `docker compose` postgres fails: port 5432 in use | System Postgres already bound | Use existing Postgres — set `DATABASE_URL` accordingly — or set `POSTGRES_PORT=15432` |
 | `smoke_middleware.py` connect refused | Uvicorn not running | Start `uvicorn app.main:app --port 8000` |
+| MCP `create_menu_item` / menu tools: `demo_store.json` missing | POS MCP server expects `demo/pos_mcp/demo_store.json` under repo root | Copy or restore from git: `demo/pos_mcp/demo_store.json`; restart MCP server on `:3001` |
 | `system_health` HTTP 503 | Postgres or Redis unreachable | Run `python scripts/check_infra.py`; verify `DATABASE_URL` / `REDIS_URL` |
 | `validate_chatwoot.py` FAIL on health | Chatwoot down or bad token | Confirm `CHATWOOT_BASE_URL` reachable; regenerate API token |
 | `validate_seed.py` FAIL mapping | Seed not applied or fixture mismatch | Run `seed_data.py` then re-validate; check `tenant_validation_service.py` expectations |
+| Human agent reply not in widget | Chatwoot webhooks not reaching middleware | Run `python scripts/register_chatwoot_webhook.py --docker-host` (or without flag if both on localhost); set `CHATWOOT_WEBHOOK_SECRET` + `CHATWOOT_WEBHOOK_CALLBACK_URL` in `.env`; restart uvicorn + Celery. **Workaround:** `GET /chat/sessions/{id}` polls Chatwoot API (2.1.3). If Chatwoot is in Docker, use `host.docker.internal` not `127.0.0.1` for webhook URL |
+| Customer message echoed as “Support Agent” right after escalation | Escalation posted `initial_message` to Chatwoot as `outgoing` | Fixed in adapter: `create_ticket` uses `message_type=incoming` for customer text. Start a **new** chat session to retest (old tickets may already have the bad message in Chatwoot) |
 | `ModuleNotFoundError: app` running scripts | Wrong cwd | Run from repo root; scripts prepend project root to `sys.path` |

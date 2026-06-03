@@ -106,6 +106,14 @@ class AddCommentRequest(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class AddCustomerMessageRequest(BaseModel):
+    """Customer message on an existing ticket (API channel — widget after escalation)."""
+
+    provider_ticket_id: str
+    body: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class AddNoteRequest(BaseModel):
     """Internal note — not visible to the customer."""
 

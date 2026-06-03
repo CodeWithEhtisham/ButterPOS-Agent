@@ -62,6 +62,25 @@ async def get_conversation(client: ChatwootClient, conversation_id: int) -> dict
     return data if isinstance(data, dict) else {}
 
 
+async def list_conversation_messages(
+    client: ChatwootClient,
+    conversation_id: int,
+) -> list[dict[str, Any]]:
+    """GET /conversations/{id}/messages — ascending message list."""
+    response = await client.request(
+        "GET",
+        client.account_path(f"/conversations/{conversation_id}/messages"),
+    )
+    data = response.json()
+    if isinstance(data, dict):
+        payload = data.get("payload")
+        if isinstance(payload, list):
+            return [m for m in payload if isinstance(m, dict)]
+    if isinstance(data, list):
+        return [m for m in data if isinstance(m, dict)]
+    return []
+
+
 async def toggle_conversation_status(
     client: ChatwootClient,
     conversation_id: int,
@@ -138,32 +157,42 @@ async def send_conversation_message(
     *,
     content: str,
     private: bool = False,
+    message_type: str = "outgoing",
     content_type: str = "text",
     content_attributes: dict[str, Any] | None = None,
-) -> None:
-    """POST /conversations/{id}/messages — public reply or private agent note."""
+) -> str | None:
+    """POST /conversations/{id}/messages — public reply, private note, or customer incoming."""
     payload: dict[str, Any] = {
         "content": content,
-        "message_type": "outgoing",
+        "message_type": message_type,
         "content_type": content_type,
         "private": private,
     }
     if content_attributes:
         payload["content_attributes"] = content_attributes
 
-    await client.request(
+    response = await client.request(
         "POST",
         client.account_path(f"/conversations/{conversation_id}/messages"),
         json=payload,
     )
+    data = response.json()
+    message_id: str | None = None
+    if isinstance(data, dict):
+        raw_id = data.get("id")
+        if raw_id is not None:
+            message_id = str(raw_id)
     logger.info(
         "Chatwoot message posted",
         extra={
             "conversation_id": conversation_id,
             "private": private,
+            "message_type": message_type,
             "content_type": content_type,
+            "message_id": message_id,
         },
     )
+    return message_id
 
 
 async def add_conversation_labels(

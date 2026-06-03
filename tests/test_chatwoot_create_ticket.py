@@ -85,9 +85,12 @@ def test_create_ticket_minimal() -> None:
 
 def test_create_ticket_with_message_and_tags() -> None:
     paths: list[str] = []
+    message_bodies: list[dict | None] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         paths.append(request.url.path)
+        if "/messages" in request.url.path and request.method == "POST":
+            message_bodies.append(json.loads(request.content) if request.content else None)
         if request.url.path.endswith("/conversations") and request.method == "POST":
             return httpx.Response(200, json=_conversation_body())
         if "/messages" in request.url.path:
@@ -113,6 +116,8 @@ def test_create_ticket_with_message_and_tags() -> None:
         assert ticket.metadata["source_id"] == "tablet-user-99"
         assert any("/conversations/9001/messages" in path for path in paths)
         assert any(path.endswith("/labels") for path in paths)
+        assert message_bodies[0]["message_type"] == "incoming"
+        assert message_bodies[0]["content"] == "Receipt printer not responding"
 
     asyncio.run(_run())
 

@@ -473,3 +473,25 @@ The middleware is the MCP **client** only. The MCP server runs separately (backe
 - Teammate exposes MCP at a URL; middleware only needs that URL in `.env`.
 - Built-in HTML demo UI removed — chat UI is the separate React app.
 - Phase 2 webhook → agent path reuses the same `AgentService` + remote MCP client.
+
+---
+
+## D-18 — `chat_sessions` for widget chat; `ai_conversations` for ticket-bound AI
+
+**Status:** Resolved (2026-06-02)
+
+### Context
+
+Android tablet and HQ admin widgets chat with middleware **before** any Chatwoot ticket exists. Phase 1 already defined `ai_conversations` linked 1:1 to `ticket_cache` for webhook-driven support tickets. Widget chat needs durable history keyed by JWT subject + client session id, with optional late binding to Chatwoot on escalation.
+
+### Decision
+
+1. **New table `chat_sessions`** — stores proactive widget AI history (`external_id`, `jwt_subject`, `source`, `branch_id`, `messages_json`).
+2. **Keep `ai_conversations`** for reactive flows where a Chatwoot ticket already exists (Phase 2.1 step 2+ webhook path).
+3. **Escalation creates Chatwoot ticket** — full transcript in a private note; public comment for customer; not every AI-resolved chat goes to Chatwoot.
+
+### Consequences
+
+- React/Kotlin send `conversation_id` + `source`; middleware is source of truth for AI chat history.
+- `ChatService` prefers stored turns over client `history` once a session exists.
+- Future webhook agent loop may write to `ai_conversations`; widget path stays on `chat_sessions`.

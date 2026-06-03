@@ -75,8 +75,8 @@ async def _process_webhook_event_async(
     init_engine(settings)
     factory = get_session_factory()
     try:
-        await process_webhook_event(event)
         async with factory() as session:
+            await process_webhook_event(event, db=session, settings=settings)
             await mark_webhook_processed(session, idempotency_key)
             await session.commit()
     except WebhookProcessingError as exc:

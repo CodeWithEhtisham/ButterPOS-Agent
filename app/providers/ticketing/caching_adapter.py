@@ -7,6 +7,7 @@ from datetime import datetime
 from app.core.cache.ticketing_read_cache import TicketingReadCache, contact_lookup_key
 from app.models.standard import (
     AddCommentRequest,
+    AddCustomerMessageRequest,
     AddNoteRequest,
     AddTagsRequest,
     AssignAgentRequest,
@@ -71,9 +72,15 @@ class CachingTicketingProvider(TicketingProvider):
         await self._cache.set_ticket(ticket)
         return ticket
 
-    async def add_comment(self, request: AddCommentRequest) -> None:
-        await self._inner.add_comment(request)
+    async def add_comment(self, request: AddCommentRequest) -> str | None:
+        message_id = await self._inner.add_comment(request)
         await self._cache.invalidate_ticket(request.provider_ticket_id)
+        return message_id
+
+    async def add_customer_message(self, request: AddCustomerMessageRequest) -> str | None:
+        message_id = await self._inner.add_customer_message(request)
+        await self._cache.invalidate_ticket(request.provider_ticket_id)
+        return message_id
 
     async def add_note(self, request: AddNoteRequest) -> None:
         await self._inner.add_note(request)

@@ -12,6 +12,7 @@ REQUIRED_METHODS = frozenset(
         "get_ticket",
         "update_status",
         "add_comment",
+        "add_customer_message",
         "add_note",
         "assign_agent",
         "add_tags",

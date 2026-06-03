@@ -1,0 +1,87 @@
+{
+  "branch_id": "demo-branch-karachi",
+  "currency": "PKR",
+  "default_tax_rate_percent": 16.0,
+  "order_count_today": 47,
+  "gross_total_today": 125400.0,
+  "branch_tax_rates": {
+    "demo-branch-karachi": 16.0
+  },
+  "items": {
+    "item-1": {
+      "id": "item-1",
+      "branch_id": "demo-branch-karachi",
+      "name": "Chicken Biryani",
+      "price": 450.0,
+      "category": "Main",
+      "tax_rate_percent": 16.0
+    },
+    "item-2": {
+      "id": "item-2",
+      "branch_id": "demo-branch-karachi",
+      "name": "Karahi",
+      "price": 1200.0,
+      "category": "Main",
+      "tax_rate_percent": 16.0
+    },
+    "item-3": {
+      "id": "item-3",
+      "branch_id": "demo-branch-karachi",
+      "name": "Cold Drink",
+      "price": 150.0,
+      "category": "Beverage",
+      "tax_rate_percent": 16.0
+    },
+    "item-3cffb9a8": {
+      "id": "item-3cffb9a8",
+      "branch_id": "demo-branch-karachi",
+      "name": "soup",
+      "price": 200.0,
+      "category": "Main",
+      "tax_rate_percent": 16.0
+    },
+    "item-2ec52601": {
+      "id": "item-2ec52601",
+      "branch_id": "demo-branch-karachi",
+      "name": "soup",
+      "price": 200.0,
+      "category": "Main",
+      "tax_rate_percent": 16.0
+    },
+    "item-743b8249": {
+      "id": "item-743b8249",
+      "branch_id": "demo-branch-karachi",
+      "name": "soup",
+      "price": 200.0,
+      "category": "Main",
+      "tax_rate_percent": 16.0
+    },
+    "item-b46f9196": {
+      "id": "item-b46f9196",
+      "branch_id": "demo-branch-karachi",
+      "name": "soup",
+      "price": 200.0,
+      "category": "Main",
+      "tax_rate_percent": 16.0
+    },
+    "item-e8f213d0": {
+      "id": "item-e8f213d0",
+      "branch_id": "demo-branch-karachi",
+      "name": "soup",
+      "price": 200.0,
+      "category": "Main",
+      "tax_rate_percent": 16.0
+    }
+  },
+  "printers": {
+    "demo-branch-karachi": {
+      "branch_id": "demo-branch-karachi",
+      "printer_name": "EPSON-TM-T88VI",
+      "status": "online",
+      "connection": "bluetooth",
+      "last_print_at": "2026-06-03T08:00:37Z",
+      "last_error": null,
+      "queue_depth": 0
+    }
+  }
+}

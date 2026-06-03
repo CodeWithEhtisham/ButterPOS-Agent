@@ -1,4 +1,4 @@
-"""TicketingProvider abstract interface — 12 methods (Task 1.1.4 + 1.4.4).
+"""TicketingProvider abstract interface — 13 methods (Task 1.1.4 + 1.4.4 + 2.1.3).
 
 All platform-specific logic lives in adapters (e.g. ChatwootAdapter in Task 1.3).
 The middleware core imports this module only, never a platform SDK.
@@ -11,6 +11,7 @@ from datetime import datetime
 
 from app.models.standard import (
     AddCommentRequest,
+    AddCustomerMessageRequest,
     AddNoteRequest,
     AddTagsRequest,
     AssignAgentRequest,
@@ -42,8 +43,12 @@ class TicketingProvider(ABC):
         """Transition ticket to a StandardStatus value."""
 
     @abstractmethod
-    async def add_comment(self, request: AddCommentRequest) -> None:
-        """Post a public reply visible to the customer."""
+    async def add_comment(self, request: AddCommentRequest) -> str | None:
+        """Post a public reply visible to the customer. Returns platform message id when available."""
+
+    @abstractmethod
+    async def add_customer_message(self, request: AddCustomerMessageRequest) -> str | None:
+        """Post a customer incoming message on an existing conversation (API channel)."""
 
     @abstractmethod
     async def add_note(self, request: AddNoteRequest) -> None:

@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
+ChatSource = Literal["android", "hq", "test"]
+ChatSpeaker = Literal["customer", "ai", "human"]
 
 
 class ChatHistoryTurn(BaseModel):
@@ -23,7 +27,15 @@ class ChatMessageRequest(BaseModel):
     )
     conversation_id: str | None = Field(
         default=None,
-        description="Optional client-side conversation id for correlation",
+        description="Client session id — server creates UUID if omitted",
+    )
+    source: ChatSource = Field(
+        default="test",
+        description="Client origin: android tablet, HQ admin, or test UI",
+    )
+    escalate: bool = Field(
+        default=False,
+        description="Force escalation to Chatwoot human agent after this turn",
     )
 
 
@@ -41,6 +53,26 @@ class ChatMessageResponse(BaseModel):
     pii_tokens_masked: int = 0
     error: str | None = None
     conversation_id: str | None = None
+    escalated: bool = False
+    provider_ticket_id: str | None = None
+    escalation_reason: str | None = None
+    forwarded_to_human: bool = False
+    message_count: int | None = None
+
+
+class ChatTurnOut(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+    speaker: ChatSpeaker
+    at: datetime
+
+
+class ChatSessionResponse(BaseModel):
+    conversation_id: str
+    status: str
+    provider_ticket_id: str | None = None
+    message_count: int
+    messages: list[ChatTurnOut] = Field(default_factory=list)
 
 
 class ChatHealthResponse(BaseModel):

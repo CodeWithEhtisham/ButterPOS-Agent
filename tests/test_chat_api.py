@@ -15,6 +15,8 @@ from app.db.session import clear_session_cache, init_engine, shutdown_engine
 from app.main import create_app
 from app.providers.llm.base import LLMResponse
 from app.providers.llm.factory import clear_llm_provider_cache
+from app.services.agent_service import AgentRunResult, AgentToolCallRecord
+from app.services.chat_service import ChatRunResult
 from tests.test_auth import TEST_CLIENT_ID, TEST_CLIENT_SECRET
 
 
@@ -66,6 +68,34 @@ def chat_client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setattr("app.api.v1.chat.get_mcp_client", lambda: mock_mcp)
     monkeypatch.setattr("app.providers.llm.factory.get_llm_provider", lambda: mock_llm)
     monkeypatch.setattr("app.api.v1.chat.get_llm_provider", lambda: mock_llm)
+
+    async def _fake_handle_message(
+        _self: object,
+        _db: object,
+        body: object,
+        *,
+        jwt_subject: str,
+    ) -> ChatRunResult:
+        return ChatRunResult(
+            agent=AgentRunResult(
+                reply="Biryani is 450 PKR.",
+                model="test",
+                tool_calls=[
+                    AgentToolCallRecord(
+                        tool_name="search_menu_items",
+                        arguments={"query": "biryani"},
+                        result='{"count": 1}',
+                        success=True,
+                    ),
+                ],
+            ),
+            conversation_id=getattr(body, "conversation_id", None) or "conv-1",
+        )
+
+    monkeypatch.setattr(
+        "app.services.chat_service.ChatService.handle_message",
+        _fake_handle_message,
+    )
 
     settings = Settings(
         _env_file=None,

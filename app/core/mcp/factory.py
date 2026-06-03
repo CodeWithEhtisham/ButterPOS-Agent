@@ -8,6 +8,14 @@ from app.core.mcp.client import MCPClient
 _mcp_client: MCPClient | None = None
 
 
+async def ensure_mcp_client(settings: Settings | None = None) -> MCPClient | None:
+    """Return cached MCP client, connecting lazily when needed (e.g. Celery worker)."""
+    try:
+        return get_mcp_client()
+    except RuntimeError:
+        return await init_mcp_client(settings)
+
+
 async def init_mcp_client(settings: Settings | None = None) -> MCPClient | None:
     """Connect to configured remote MCP server and cache tool catalog."""
     global _mcp_client

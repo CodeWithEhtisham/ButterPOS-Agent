@@ -7,20 +7,29 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_subject, pii_masker_dep, settings_dep
+from app.api.deps import get_current_subject, pii_masker_dep, settings_dep, ticketing_provider_dep
 from app.core.config import Settings
 from app.core.mcp.factory import get_mcp_client
 from app.core.pii.masker import PIIMasker
+from app.db.session import get_async_session
 from app.providers.llm.factory import get_llm_provider
+from app.providers.ticketing.base import TicketingProvider
 from app.schemas.auth import AuthenticatedSubject
 from app.schemas.chat import (
     ChatHealthResponse,
     ChatMessageRequest,
     ChatMessageResponse,
+    ChatSessionResponse,
     ChatToolCallOut,
+    ChatTurnOut,
 )
+from app.schemas.chat_session import StoredChatTurn
 from app.services.agent_service import AgentService
+from app.services.chat_service import ChatService
+from app.services.chat_session_sync_service import ChatSessionSyncService
+from app.providers.ticketing.factory import create_ticketing_provider
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -31,11 +40,13 @@ _UI_ASSETS: dict[str, str] = {
 }
 
 
-def _agent_service(
+def _chat_service(
     settings: Annotated[Settings, Depends(settings_dep)],
     pii: Annotated[PIIMasker, Depends(pii_masker_dep)],
-) -> AgentService:
-    return AgentService(settings, get_llm_provider(), get_mcp_client(), pii)
+    ticketing: Annotated[TicketingProvider, Depends(ticketing_provider_dep)],
+) -> ChatService:
+    agent = AgentService(settings, get_llm_provider(), get_mcp_client(), pii)
+    return ChatService(settings, agent, ticketing)
 
 
 @router.get(
@@ -90,25 +101,28 @@ async def chat_ui_static(asset: str) -> FileResponse:
 )
 async def send_chat_message(
     body: ChatMessageRequest,
-    _subject: Annotated[AuthenticatedSubject, Depends(get_current_subject)],
-    service: Annotated[AgentService, Depends(_agent_service)],
+    subject: Annotated[AuthenticatedSubject, Depends(get_current_subject)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    service: Annotated[ChatService, Depends(_chat_service)],
 ) -> ChatMessageResponse:
-    """JWT-protected chat — PII masked before every LLM call; tools via MCP_SERVER_URL."""
-    result = await service.run_chat(
-        body.message,
-        history=[turn.model_dump() for turn in body.history],
-        branch_id=body.branch_id,
-    )
+    """JWT-protected chat — persisted in Postgres; escalates to Chatwoot when requested."""
+    run = await service.handle_message(db, body, jwt_subject=subject.subject)
+    agent = run.agent
 
-    if result.error and not result.reply:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result.error)
+    if agent.error and not agent.reply:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=agent.error)
 
     return ChatMessageResponse(
-        reply=result.reply,
-        model=result.model,
-        pii_tokens_masked=result.pii_tokens_masked,
-        error=result.error,
-        conversation_id=body.conversation_id,
+        reply=agent.reply,
+        model=agent.model,
+        pii_tokens_masked=agent.pii_tokens_masked,
+        error=agent.error,
+        conversation_id=run.conversation_id,
+        escalated=run.escalated,
+        provider_ticket_id=run.provider_ticket_id,
+        escalation_reason=run.escalation_reason,
+        forwarded_to_human=run.forwarded_to_human,
+        message_count=None,
         tool_calls=[
             ChatToolCallOut(
                 tool_name=tc.tool_name,
@@ -116,6 +130,50 @@ async def send_chat_message(
                 result=tc.result,
                 success=tc.success,
             )
-            for tc in result.tool_calls
+            for tc in agent.tool_calls
+        ],
+    )
+
+
+@router.get(
+    "/sessions/{conversation_id}",
+    response_model=ChatSessionResponse,
+    summary="Poll chat session (human agent replies after escalation)",
+)
+async def get_chat_session(
+    conversation_id: str,
+    subject: Annotated[AuthenticatedSubject, Depends(get_current_subject)],
+    settings: Annotated[Settings, Depends(settings_dep)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    service: Annotated[ChatService, Depends(_chat_service)],
+    since_index: int = 0,
+) -> ChatSessionResponse:
+    """JWT-protected session poll — returns new messages including human agent replies relayed from Chatwoot."""
+    chat_session = await service.get_session_for_subject(
+        db,
+        conversation_id,
+        jwt_subject=subject.subject,
+    )
+    if chat_session is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+
+    sync = ChatSessionSyncService(settings, create_ticketing_provider(settings))
+    await sync.sync_human_replies_from_chatwoot(db, chat_session)
+
+    turns = [StoredChatTurn.model_validate(m) for m in chat_session.messages_json or []]
+    sliced = turns[since_index:] if since_index > 0 else turns
+    return ChatSessionResponse(
+        conversation_id=chat_session.external_id,
+        status=chat_session.status,
+        provider_ticket_id=chat_session.provider_ticket_id,
+        message_count=len(turns),
+        messages=[
+            ChatTurnOut(
+                role=turn.role,
+                content=turn.content,
+                speaker=turn.speaker,
+                at=turn.at,
+            )
+            for turn in sliced
         ],
     )

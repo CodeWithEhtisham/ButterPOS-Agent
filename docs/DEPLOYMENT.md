@@ -283,6 +283,33 @@ python scripts/validate_chatwoot.py --json
 
 Creates a test contact/conversation in Chatwoot (safe to delete manually).
 
+### Chatwoot webhook registration (Phase 2.1 — human reply relay)
+
+Required for human agent replies to reach the widget via Celery (in addition to poll fallback on `GET /chat/sessions/{id}`).
+
+**Prerequisites:** `CHATWOOT_*` in `.env`, middleware reachable from Chatwoot, Redis + Celery worker.
+
+```bash
+# 1) Register webhook (pick one)
+python scripts/register_chatwoot_webhook.py --docker-host   # Chatwoot in Docker
+python scripts/register_chatwoot_webhook.py                 # both on localhost
+
+# 2) Copy secret from script output into .env → CHATWOOT_WEBHOOK_SECRET
+
+# 3) Terminals
+uvicorn app.main:app --reload --port 8000
+celery -A app.worker.celery_app worker -l info
+
+# 4) Escalate in widget, reply in Chatwoot — Celery should log human_reply_relayed
+python scripts/register_chatwoot_webhook.py --list          # verify URL registered
+```
+
+| Symptom | Fix |
+|---------|-----|
+| `webhook_event_log` empty | Re-run register with `--docker-host`; check `--list` URL |
+| Celery idle | Start worker; confirm `REDIS_URL` matches broker |
+| Widget still empty | Hard-refresh UI; poll uses Chatwoot API fallback on GET session |
+
 ---
 
 ## Test middleware + remote MCP

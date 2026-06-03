@@ -80,6 +80,13 @@ class Settings(BaseSettings):
         description="Optional agent user id for live assign_agent validation",
     )
     chatwoot_webhook_secret: str = ""
+    chatwoot_webhook_callback_url: str = Field(
+        default="",
+        description=(
+            "URL Chatwoot POSTs webhooks to. Empty = MIDDLEWARE_BASE_URL + /api/v1/webhooks/chatwoot. "
+            "Docker Chatwoot: http://host.docker.internal:8000/api/v1/webhooks/chatwoot"
+        ),
+    )
     chatwoot_request_timeout_seconds: float = Field(
         default=30.0,
         description="HTTP timeout for Chatwoot Application API calls",
@@ -129,6 +136,10 @@ class Settings(BaseSettings):
     agent_max_tool_rounds: int = Field(
         default=6,
         description="Max LLM↔tool iterations per agent chat request",
+    )
+    agent_inbound_enabled: bool = Field(
+        default=True,
+        description="Run agent loop on incoming Chatwoot message_created webhooks",
     )
     mcp_stub_server: str = "spikes/0.6_mcp_validation/stub_server/butterpos_stub_mcp.py"
 

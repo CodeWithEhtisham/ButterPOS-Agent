@@ -18,6 +18,7 @@ Configuration is **centralized in `.env`**. The app loads every tunable through 
 | `CHATWOOT_INBOX_ID` | Step 0.1+ | API-channel inbox ID |
 | `CHATWOOT_AGENT_ID` | Optional | Agent user id for live `assign_agent` validation (Task 1.8.2) |
 | `CHATWOOT_WEBHOOK_SECRET` | Phase 1 | HMAC secret for inbound webhook verification |
+| `CHATWOOT_WEBHOOK_CALLBACK_URL` | Optional | URL Chatwoot POSTs to; use `http://host.docker.internal:8000/api/v1/webhooks/chatwoot` when Chatwoot is in Docker |
 | `CHATWOOT_WEBHOOK_MAX_AGE_SECONDS` | Optional | Replay window for webhook timestamps (default `300`) |
 | `CHATWOOT_WEBHOOK_SUBSCRIPTIONS` | Optional | Comma-separated events to register (see `.env.example`) |
 | `CHATWOOT_HTTP_RETRY_BACKOFF_MAX_SECONDS` | Optional | Max sleep between Chatwoot HTTP retries (default `2`) |
@@ -171,6 +172,7 @@ Requires `REDIS_URL` for production rate limiting. Outgoing messages and non-`me
 | `MCP_TRANSPORT` | Optional | `streamable_http` (default) or `sse` |
 | `AGENT_DEFAULT_BRANCH_ID` | Optional | Default branch for MCP tool calls (default `demo-branch-karachi`) |
 | `AGENT_MAX_TOOL_ROUNDS` | Optional | Max LLM↔tool loops per chat message (default `6`) |
+| `AGENT_INBOUND_ENABLED` | Optional | Run agent on inbound Chatwoot webhooks (default `true`) |
 
 ## Credential locations
 

@@ -105,15 +105,17 @@ React widget / Kotlin tablet chat with the support agent. Middleware connects to
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/api/v1/chat/health` | None | Remote MCP connected + OpenRouter configured |
-| `POST` | `/api/v1/chat/messages` | Bearer JWT | Send message; agent loop runs LLM + MCP tools |
+| `GET` | `/api/v1/chat/sessions/{conversation_id}` | Bearer JWT | Poll session history (human agent replies after escalation) |
+| `POST` | `/api/v1/chat/messages` | Bearer JWT | Send message; agent loop runs LLM + MCP tools; persists session; optional Chatwoot escalation |
 
-Implementation: `app/api/v1/chat.py`, `app/services/agent_service.py`, `app/core/mcp/client.py`.
+Implementation: `app/api/v1/chat.py`, `app/services/chat_service.py`, `app/services/agent_service.py`, `app/services/escalation_service.py`, `app/core/mcp/client.py`.
 
 #### Frontend flow
 
 1. `POST /api/v1/auth/token` — exchange `API_CLIENT_ID` / `API_CLIENT_SECRET` + `subject` for JWT
 2. `POST /api/v1/chat/messages` — `Authorization: Bearer <token>`, body below
-3. Optional: `GET /api/v1/chat/health` — readiness before enabling chat UI
+3. After escalation — poll `GET /api/v1/chat/sessions/{conversation_id}?since_index=N` every few seconds for human replies
+4. Optional: `GET /api/v1/chat/health` — readiness before enabling chat UI
 
 #### `GET /api/v1/chat/health`
 
@@ -141,22 +143,83 @@ Implementation: `app/api/v1/chat.py`, `app/services/agent_service.py`, `app/core
   "message": "What is the price of chicken biryani?",
   "branch_id": "demo-branch-karachi",
   "history": [{"role": "user", "content": "Hi"}, {"role": "assistant", "content": "Hello!"}],
-  "conversation_id": "optional-client-id"
+  "conversation_id": "optional-client-id",
+  "source": "test",
+  "escalate": false
 }
 ```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `message` | string | yes | User message (1–4000 chars) |
+| `history` | array | no | Client-side history seed — ignored once server has stored turns for `conversation_id` |
+| `branch_id` | string | no | Branch context for MCP tools; defaults to `AGENT_DEFAULT_BRANCH_ID` |
+| `conversation_id` | string | no | Client session id; server generates UUID if omitted |
+| `source` | `"android"` \| `"hq"` \| `"test"` | no | Client origin (default `test`) |
+| `escalate` | boolean | no | Force Chatwoot escalation after this turn (default `false`) |
+
+**Auto-escalation (no flag required):** agent error · customer keywords (`human agent`, `escalate`, `real person`, etc.).
 
 **Response `200`:**
 
 ```json
 {
   "reply": "Chicken Biryani is PKR 450 (PKR 522 with tax).",
-  "model": "openai/gpt-4o",
+  "model": "openai/gpt-4o-mini",
   "tool_calls": [{"tool_name": "search_menu_items", "arguments": {}, "result": "...", "success": true}],
   "pii_tokens_masked": 0,
   "error": null,
-  "conversation_id": "optional-client-id"
+  "conversation_id": "550e8400-e29b-41d4-a716-446655440000",
+  "escalated": false,
+  "provider_ticket_id": null,
+  "escalation_reason": null,
+  "forwarded_to_human": false
 }
 ```
+
+| Response field | Description |
+|----------------|-------------|
+| `conversation_id` | Server session id — send on subsequent turns |
+| `escalated` | `true` if a Chatwoot ticket was created/updated this turn |
+| `provider_ticket_id` | Chatwoot conversation id when escalated |
+| `escalation_reason` | e.g. `client_requested_escalation`, `customer_requested_human`, `agent_error:…` |
+| `forwarded_to_human` | `true` when session is escalated and message was sent to Chatwoot (no AI run) |
+| `reply` (when `forwarded_to_human`) | Empty string — clients should show a persistent “human agent active” state, not a per-message ack bubble |
+
+**After escalation:** further `POST /messages` forwards customer text to Chatwoot via `add_customer_message` (incoming on API channel). AI agent does not run.
+
+#### `GET /api/v1/chat/sessions/{conversation_id}`
+
+**Query:** `since_index` (int, default `0`) — return only messages from this index onward (for polling).
+
+**Response `200`:**
+
+```json
+{
+  "conversation_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "escalated",
+  "provider_ticket_id": "5678",
+  "message_count": 5,
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "Checking your printer now…",
+      "speaker": "human",
+      "at": "2026-06-02T12:05:00Z"
+    }
+  ]
+}
+```
+
+| `speaker` | Meaning |
+|-----------|---------|
+| `customer` | Widget user |
+| `ai` | Middleware agent |
+| `human` | Chatwoot support agent (relayed via webhook) |
+
+**Errors:** `401` missing JWT · `404` session not found or wrong `jwt_subject`
+
+**On escalation:** middleware creates a Chatwoot conversation (or appends a private note if already escalated), posts a **private note** with the full AI transcript + tool calls, adds a **public comment** with the customer-facing reply, tags `ai-escalated` + `source-{android|hq|test}`, sets status `escalated`, and assigns `CHATWOOT_AGENT_ID` when configured.
 
 **Errors:** `401` missing JWT · `400` agent error with no reply
 

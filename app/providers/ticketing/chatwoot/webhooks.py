@@ -178,6 +178,23 @@ def parse_chatwoot_webhook(raw_body: bytes) -> StandardEvent:
     )
 
 
+async def list_account_webhooks(client: ChatwootClient) -> list[dict[str, Any]]:
+    """GET /webhooks — list account webhooks."""
+    response = await client.request("GET", client.account_path("/webhooks"))
+    data = response.json()
+    if isinstance(data, dict):
+        payload = data.get("payload")
+        if isinstance(payload, dict):
+            webhooks = payload.get("webhooks")
+            if isinstance(webhooks, list):
+                return [item for item in webhooks if isinstance(item, dict)]
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, dict)]
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+    return []
+
+
 async def register_account_webhook(
     client: ChatwootClient,
     callback_url: str,

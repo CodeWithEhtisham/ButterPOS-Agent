@@ -132,6 +132,26 @@ def test_adapter_verify_and_parse() -> None:
     asyncio.run(_run())
 
 
+def test_list_account_webhooks() -> None:
+    async def _run() -> None:
+        transport = httpx.MockTransport(
+            lambda _request: httpx.Response(
+                200,
+                json={
+                    "payload": {
+                        "webhooks": [{"id": 1, "url": "https://example.com/hook"}],
+                    },
+                },
+            ),
+        )
+        adapter = ChatwootAdapter(_settings(), client=ChatwootClient(_settings(), transport=transport))
+        rows = await adapter.list_webhooks()
+        await adapter._client.close()
+        assert rows[0]["url"] == "https://example.com/hook"
+
+    asyncio.run(_run())
+
+
 def test_register_webhook_posts_to_chatwoot() -> None:
     captured: dict = {}
 

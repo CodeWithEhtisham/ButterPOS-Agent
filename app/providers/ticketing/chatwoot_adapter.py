@@ -10,6 +10,7 @@ from datetime import datetime
 from app.core.config import Settings
 from app.models.standard import (
     AddCommentRequest,
+    AddCustomerMessageRequest,
     AddNoteRequest,
     AddTagsRequest,
     AssignAgentRequest,
@@ -100,11 +101,13 @@ class ChatwootAdapter(TicketingProvider):
         conversation_id = int(ticket.provider_ticket_id)
 
         if request.initial_message:
+            # Customer text — must be incoming or relay treats it as a human-agent reply.
             await send_conversation_message(
                 self._client,
                 conversation_id,
                 content=request.initial_message,
                 private=False,
+                message_type="incoming",
             )
 
         if request.tags:
@@ -148,20 +151,31 @@ class ChatwootAdapter(TicketingProvider):
         updated = await get_conversation(self._client, conversation_id)
         return conversation_to_standard_ticket(updated)
 
-    async def add_comment(self, request: AddCommentRequest) -> None:
-        """Post a public AI reply visible to the customer."""
+    async def add_comment(self, request: AddCommentRequest) -> str | None:
+        """Post a public reply visible to the customer."""
         conversation_id = parse_conversation_id(request.provider_ticket_id)
         content_type = str(request.metadata.get("content_type", "text"))
         content_attributes = request.metadata.get("content_attributes")
         if content_attributes is not None and not isinstance(content_attributes, dict):
             content_attributes = None
-        await send_conversation_message(
+        return await send_conversation_message(
             self._client,
             conversation_id,
             content=request.body,
             private=False,
             content_type=content_type,
             content_attributes=content_attributes,
+        )
+
+    async def add_customer_message(self, request: AddCustomerMessageRequest) -> str | None:
+        """Post a customer incoming message on an API-channel conversation."""
+        conversation_id = parse_conversation_id(request.provider_ticket_id)
+        return await send_conversation_message(
+            self._client,
+            conversation_id,
+            content=request.body,
+            private=False,
+            message_type="incoming",
         )
 
     async def add_note(self, request: AddNoteRequest) -> None:
@@ -228,6 +242,12 @@ class ChatwootAdapter(TicketingProvider):
             callback_url,
             subscriptions=resolved,
         )
+
+    async def list_webhooks(self) -> list[dict]:
+        """List account webhooks registered in Chatwoot."""
+        from app.providers.ticketing.chatwoot.webhooks import list_account_webhooks
+
+        return await list_account_webhooks(self._client)
 
     async def list_tickets_updated_since(self, since: datetime) -> list[StandardTicket]:
         """Filter Chatwoot conversations updated after `since` for configured inbox."""

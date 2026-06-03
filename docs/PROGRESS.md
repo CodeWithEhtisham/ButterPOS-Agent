@@ -2,7 +2,7 @@
 
 Running record of completed steps. Phases are sequential — Phase 1 does not start until Phase 0 is confirmed complete here.
 
-**Last updated:** 2026-06-02 (Task 1.8.3 — Phase 1 complete)
+**Last updated:** 2026-06-02 (Phase 2.1 step 3 — human reply relay to widget)
 
 ---
 
@@ -137,6 +137,55 @@ Running record of completed steps. Phases are sequential — Phase 1 does not st
 
 ---
 
-## Phase 2 — Agent loop *(not started)*
+## Phase 2 — Agent loop *(in progress)*
 
-<!-- Phase 2 tasks begin after Team Lead confirms Phase 1 complete above. -->
+| Task | Description | Status |
+|------|-------------|--------|
+| **2.1.1** | Persist chat sessions in Postgres + escalate to Chatwoot | **Complete** (2026-06-02) |
+
+### Task 2.1.1 sub-steps
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | `chat_sessions` table + Alembic migration `20260602_0002` | **Complete** (2026-06-02) |
+| 2 | `ChatService` — agent loop + append turns to DB | **Complete** (2026-06-02) |
+| 3 | `EscalationService` — Chatwoot ticket, private transcript note, public reply, tags, assign | **Complete** (2026-06-02) |
+| 4 | Chat API — `source`, `escalate` request fields; `escalated`, `provider_ticket_id`, `escalation_reason` response | **Complete** (2026-06-02) |
+| 5 | Unit tests — escalation helpers, ORM columns, chat API | **Complete** (2026-06-02) |
+
+**Escalation triggers (V1 heuristics):** client `escalate: true` · agent error (e.g. max tool rounds) · keywords (`human agent`, `escalate`, etc.).
+
+**Run migration before testing:** `alembic upgrade head` (creates `chat_sessions`).
+
+| Task | Description | Status |
+|------|-------------|--------|
+| **2.1.2** | Inbound webhook → agent loop → Chatwoot reply (`ai_conversations`) | **Complete** (2026-06-02) |
+
+### Task 2.1.2 sub-steps
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | `InboundAgentService` — incoming `message_created` → agent → `add_comment` | **Complete** (2026-06-02) |
+| 2 | Persist turns in `ai_conversations` linked to `ticket_cache` | **Complete** (2026-06-02) |
+| 3 | Skip agent when ticket is human-handoff (`ai-escalated` tag, assignee, private note) | **Complete** (2026-06-02) |
+| 4 | Handoff existing ticket on agent error / human keywords | **Complete** (2026-06-02) |
+| 5 | Celery worker lazy MCP init + unit tests | **Complete** (2026-06-02) |
+
+**Inbound agent requires:** Celery worker running (`celery -A app.worker.celery_app worker`), `AGENT_INBOUND_ENABLED=true`, OpenRouter + MCP configured.
+
+| Task | Description | Status |
+|------|-------------|--------|
+| **2.1.3** | Relay human Chatwoot replies to widget + poll API | **Complete** (2026-06-02) |
+
+### Task 2.1.3 sub-steps
+
+| # | Sub-step | Status |
+|---|----------|--------|
+| 1 | `ChatRelayService` — outgoing webhook → `chat_sessions` (`speaker: human`) | **Complete** (2026-06-02) |
+| 2 | `GET /api/v1/chat/sessions/{id}` — JWT poll with `since_index` | **Complete** (2026-06-02) |
+| 3 | After escalation — forward customer messages to Chatwoot (`add_customer_message`) | **Complete** (2026-06-02) |
+| 4 | Dedup middleware-originated Chatwoot message ids (no relay echo) | **Complete** (2026-06-02) |
+| 5 | Test UI polls every 3s when escalated | **Complete** (2026-06-02) |
+| 6 | `scripts/register_chatwoot_webhook.py` + `CHATWOOT_WEBHOOK_CALLBACK_URL` (Docker host URL) | **Complete** (2026-06-02) |
+
+<!-- Phase 2.1 step 4+ begin after Team Lead confirms step 3 above. -->

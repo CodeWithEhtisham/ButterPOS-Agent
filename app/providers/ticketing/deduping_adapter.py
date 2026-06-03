@@ -11,6 +11,7 @@ from app.core.dedup.ticket_creation_store import DEDUP_METADATA_KEYS, extract_ti
 from app.core.logging_config import get_logger
 from app.models.standard import (
     AddCommentRequest,
+    AddCustomerMessageRequest,
     AddNoteRequest,
     AddTagsRequest,
     AssignAgentRequest,
@@ -123,8 +124,11 @@ class DedupingTicketingProvider(TicketingProvider):
     async def add_tags(self, request: AddTagsRequest) -> StandardTicket:
         return await self._inner.add_tags(request)
 
-    async def add_comment(self, request: AddCommentRequest) -> None:
-        await self._inner.add_comment(request)
+    async def add_comment(self, request: AddCommentRequest) -> str | None:
+        return await self._inner.add_comment(request)
+
+    async def add_customer_message(self, request: AddCustomerMessageRequest) -> str | None:
+        return await self._inner.add_customer_message(request)
 
     async def add_note(self, request: AddNoteRequest) -> None:
         await self._inner.add_note(request)

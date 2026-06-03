@@ -11,6 +11,7 @@ from app.db.base import Base
 from app.db.models import (  # noqa: F401 — register metadata
     AIConversation,
     Branch,
+    ChatSession,
     KBArticle,
     KBArticleVersion,
     Restaurant,
@@ -21,7 +22,7 @@ from app.db.models import (  # noqa: F401 — register metadata
 )
 from app.db.url import to_sync_database_url
 
-EXPECTED_TABLES = {
+INITIAL_MIGRATION_TABLES = {
     "restaurants",
     "branches",
     "users",
@@ -32,6 +33,8 @@ EXPECTED_TABLES = {
     "webhook_event_log",
     "sla_config",
 }
+
+EXPECTED_TABLES = INITIAL_MIGRATION_TABLES | {"chat_sessions"}
 
 
 def test_to_sync_database_url_asyncpg() -> None:
@@ -49,14 +52,20 @@ def test_alembic_has_single_head_revision() -> None:
     cfg = Config(str(root / "alembic.ini"))
     script = ScriptDirectory.from_config(cfg)
     heads = script.get_heads()
-    assert heads == ["20260602_0001"]
+    assert heads == ["20260602_0002"]
 
 
 def test_initial_migration_mentions_all_tables() -> None:
     root = Path(__file__).resolve().parents[1]
     migration = (root / "alembic" / "versions" / "20260602_0001_initial_schema.py").read_text()
-    for table in EXPECTED_TABLES:
+    for table in INITIAL_MIGRATION_TABLES:
         assert f'"{table}"' in migration
+
+
+def test_chat_sessions_migration() -> None:
+    root = Path(__file__).resolve().parents[1]
+    migration = (root / "alembic" / "versions" / "20260602_0002_chat_sessions.py").read_text()
+    assert '"chat_sessions"' in migration
 
 
 def test_orm_metadata_matches_expected_tables() -> None:

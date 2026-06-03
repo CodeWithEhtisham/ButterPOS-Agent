@@ -224,6 +224,61 @@ Chatwoot remains system of record for support tickets. Postgres holds a **durabl
 
 Strict Pydantic schemas for these payloads are deferred to the agent loop (Phase 2); ORM stores flexible JSONB.
 
+---
+
+## Tables (Phase 2.1 — chat persistence)
+
+ORM model: `app/db/models/chat_session.py`. Migration: `20260602_0002_chat_sessions`.
+
+### Why `chat_sessions` alongside `ai_conversations`?
+
+| Table | Purpose |
+|-------|---------|
+| `chat_sessions` | **Proactive** AI chat from Android/HQ widgets — no Chatwoot ticket until escalation |
+| `ai_conversations` | **Reactive** AI tied to an existing `ticket_cache` row (webhook-driven support tickets) |
+
+Both store LLM/tool audit in Postgres; Chatwoot remains system of record for human support after escalation only.
+
+### Entity relationship
+
+```
+JWT subject (widget user) 1 ──< ChatSession (many sessions per user)
+ChatSession 0..1 ── provider_ticket_id ──> Chatwoot conversation (after escalation)
+```
+
+### `chat_sessions`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint PK | Internal id (TimestampMixin) |
+| `external_id` | varchar(64) unique | Client/server session id (UUID) |
+| `jwt_subject` | varchar(128) | JWT `sub` — widget user identity |
+| `source` | varchar(16) | `android`, `hq`, or `test` |
+| `branch_id` | varchar(128) nullable | Branch context for MCP tools |
+| `status` | varchar(32) | `active` or `escalated` |
+| `provider_ticket_id` | varchar(128) nullable | Chatwoot conversation id after escalation |
+| `provider_contact_id` | varchar(128) nullable | Chatwoot contact id |
+| `messages_json` | jsonb | Full turn history — see shape below |
+| `meta` | jsonb | Escalation reason, timestamps, extensible metadata |
+| `created_at` / `updated_at` | timestamptz | TimestampMixin |
+
+### `messages_json` shape (validated in `app/schemas/chat_session.py`)
+
+Array of turns:
+
+```json
+{
+  "role": "user | assistant",
+  "content": "...",
+  "at": "2026-06-02T12:00:00Z",
+  "tool_calls": [
+    {"tool_name": "...", "arguments": {}, "result": "...", "success": true}
+  ]
+}
+```
+
+Service layer: `ChatSessionRepository`, `ChatService`, `EscalationService`.
+
 ### Why a local ticket cache mirror?
 
 | Reason | Detail |

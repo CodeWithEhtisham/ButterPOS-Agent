@@ -13,6 +13,7 @@ from app.db.base import Base
 from app.db.models import (  # noqa: F401 — register ORM tables on Base.metadata
     AIConversation,
     Branch,
+    ChatSession,
     KBArticle,
     KBArticleVersion,
     Restaurant,

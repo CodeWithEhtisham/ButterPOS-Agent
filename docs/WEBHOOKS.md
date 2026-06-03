@@ -12,7 +12,7 @@ Inbound webhook handling for the ticketing platform (Chatwoot).
 4. Endpoint returns `200` with `status: accepted`, `status: duplicate`, or `status: rate_limited` (**Task 1.4.2** + **1.5.2**).
 5. Idempotency row persisted in `webhook_event_log` (`received` on first delivery; replays skip insert).
 6. Incoming customer messages checked against Redis sliding-window rate limits (**Task 1.5.2**) before Celery enqueue.
-7. Process event via Celery `webhook.process` (**Task 1.4.3** — live stub processor).
+7. Process event via Celery `webhook.process` (**Task 1.4.3** — live; **Phase 2.1.2** runs inbound agent when enabled).
 8. Failures → Redis DLQ + beat retry (**Task 1.4.3**).
 
 ---
@@ -118,6 +118,37 @@ result = await adapter.register_webhook("https://your-host/api/v1/webhooks/chatw
 # Save result["secret"] → CHATWOOT_WEBHOOK_SECRET in .env
 ```
 
+**CLI (recommended for local dev):**
+
+```bash
+# Chatwoot in Docker, middleware on host (Linux/macOS Docker Desktop)
+python scripts/register_chatwoot_webhook.py --docker-host
+
+# Chatwoot and middleware both on host
+python scripts/register_chatwoot_webhook.py
+
+# Inspect existing webhooks
+python scripts/register_chatwoot_webhook.py --list
+
+# Preview URL without registering
+python scripts/register_chatwoot_webhook.py --docker-host --dry-run
+```
+
+After registration, add to `.env`:
+
+```bash
+CHATWOOT_WEBHOOK_SECRET=<secret-from-script-output>
+CHATWOOT_WEBHOOK_CALLBACK_URL=http://host.docker.internal:8000/api/v1/webhooks/chatwoot
+```
+
+Restart **uvicorn** and **Celery worker**. Human replies should log `human_reply_relayed` in the worker.
+
+| Chatwoot runs… | Middleware runs… | Callback URL |
+|----------------|------------------|--------------|
+| Docker container | Host (`uvicorn`) | `http://host.docker.internal:8000/api/v1/webhooks/chatwoot` |
+| Same host | Same host | `http://127.0.0.1:8000/api/v1/webhooks/chatwoot` |
+| Remote / ngrok | Cloud | `https://<public-host>/api/v1/webhooks/chatwoot` |
+
 API: `POST /api/v1/accounts/{account_id}/webhooks` with V1 subscriptions (`message_created`, `conversation_status_changed`, etc.).
 
 Local dev may require HTTPS or ngrok — Chatwoot rejects plain HTTP URLs in production mode.
@@ -221,6 +252,45 @@ celery -A app.worker.celery_app beat -l info
 ```
 
 Requires `REDIS_URL` (broker + DLQ).
+
+---
+
+## Inbound agent loop (Phase 2.1.2)
+
+When `AGENT_INBOUND_ENABLED=true` (default), Celery task `webhook.process` runs the same LLM + MCP agent as the widget chat API on qualifying **incoming** `message_created` events.
+
+| Check | Agent runs? |
+|-------|-------------|
+| `message_type` incoming + contact sender | Yes |
+| Outgoing / private note | No |
+| Ticket tagged `ai-escalated` or status `escalated` | No — human handoff |
+| Ticket has assignee | No |
+| `AGENT_INBOUND_ENABLED=false` | No — cache invalidation only |
+
+**Flow:**
+
+1. PII-mask inbound `message_body` (Task 1.5.3).
+2. Load or fetch `ticket_cache` for `provider_ticket_id`.
+3. Append user + assistant turns to `ai_conversations` (1:1 with ticket cache).
+4. On success → `add_comment()` with AI reply (customer-visible).
+5. On agent error or human keywords → `handoff_existing_ticket()` (private transcript note, public handoff message, status `escalated`, assign `CHATWOOT_AGENT_ID` when set).
+
+Implementation: `app/services/inbound_agent_service.py`, wired from `app/services/webhook_processor.py`.
+
+**Requires Celery worker** with same `.env` as API (OpenRouter, MCP, Chatwoot). MCP connects lazily on first inbound agent run in the worker process.
+
+---
+
+## Widget relay (Phase 2.1.3)
+
+When a widget session is **escalated** (`chat_sessions.provider_ticket_id` set), outgoing **public** Chatwoot agent replies are relayed back into `chat_sessions.messages_json` with `speaker: human`.
+
+| Step | Detail |
+|------|--------|
+| Human replies in Chatwoot | `message_created` webhook, `message_type: outgoing`, not private |
+| Middleware | `ChatRelayService` appends turn; dedups middleware-originated message ids |
+| Widget | Polls `GET /api/v1/chat/sessions/{id}?since_index=N` |
+| Customer → human | After escalation, `POST /messages` forwards to Chatwoot (`add_customer_message`) |
 
 ---
 

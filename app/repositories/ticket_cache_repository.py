@@ -12,10 +12,39 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging_config import get_logger
 from app.db.models.ticket_cache import TicketCache
 from app.models.standard import StandardTicket
+from app.providers.ticketing.base import TicketingProvider
 
 logger = get_logger("app.ticket_cache")
 
 TicketCacheSyncAction = Literal["created", "updated", "unchanged"]
+
+
+async def get_ticket_cache_by_provider_id(
+    session: AsyncSession,
+    provider_ticket_id: str,
+) -> TicketCache | None:
+    """Load a cached ticket row by platform conversation id."""
+    return await session.scalar(
+        select(TicketCache).where(TicketCache.provider_ticket_id == provider_ticket_id),
+    )
+
+
+async def get_or_fetch_ticket_cache(
+    session: AsyncSession,
+    ticketing: TicketingProvider,
+    provider_ticket_id: str,
+) -> TicketCache:
+    """Return ticket_cache row, fetching from the ticketing platform when missing."""
+    row = await get_ticket_cache_by_provider_id(session, provider_ticket_id)
+    if row is not None:
+        return row
+
+    ticket = await ticketing.get_ticket(provider_ticket_id)
+    await upsert_ticket_cache(session, ticket)
+    row = await get_ticket_cache_by_provider_id(session, provider_ticket_id)
+    if row is None:
+        raise RuntimeError(f"ticket_cache insert failed for {provider_ticket_id}")
+    return row
 
 
 @dataclass(frozen=True)
