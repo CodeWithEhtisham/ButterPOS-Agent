@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
+
 from app.core.config import Settings, get_settings
 from app.core.mcp.client import MCPClient
+
+logger = logging.getLogger(__name__)
 
 _mcp_client: MCPClient | None = None
 
@@ -25,7 +30,17 @@ async def init_mcp_client(settings: Settings | None = None) -> MCPClient | None:
         return None
 
     client = MCPClient.for_url(url, transport=app_settings.mcp_transport)
-    await client.connect()
+    try:
+        await client.connect()
+    except (Exception, asyncio.CancelledError) as exc:
+        # MCP SDK may raise CancelledError when the HTTP connect fails (not Exception).
+        logger.warning(
+            "MCP server not reachable at %s (%s) — start MCP first; chat tools disabled until connected",
+            url,
+            type(exc).__name__,
+        )
+        await client.disconnect()
+        return None
     _mcp_client = client
     return client
 

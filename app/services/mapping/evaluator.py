@@ -1,4 +1,33 @@
-"""Map DB row to CustomerMappingResult — pure logic for Task 1.6."""
+"""Map DB row to CustomerMappingResult — pure logic for Task 1.6.
+
+Agent authorization tiers (Phase 2 playbook / MCP routing)
+----------------------------------------------------------
+These tiers classify **what the AI may do autonomously**, not support plan
+levels (8h / 16h / 24-7). See ``docs/AUTH.md`` and ``docs/MCP_INTEGRATION.md``.
+
+**Tier 1 — read-only (auto)**
+    Safe diagnostics only: fetch status, check devices, look up sales/menu.
+    No mutating fixes. Used automatically when confidence is not required.
+
+**Tier 2 — fix (conditional)**
+    State-changing actions (e.g. add/update menu item) allowed only on
+    **high model confidence** or after a **soft confirmation** from the user.
+    Blocked when mapping caps the session below tier 2.
+
+**Tier 3 — always escalate**
+    Sensitive or irreversible work is **never** executed by the agent; route
+    to a human agent. Tier 3 is not exposed as MCP tools in V1.
+
+``max_agent_tier`` on ``CustomerMappingResult`` is the **ceiling** for the
+session (from SLA, payment, and coverage), not the tier of a single turn:
+
+- **3** — account ``active``: full playbook (tiers 1–3 per turn/confidence).
+- **1** — restricted statuses: read-only only; escalate or deflect to billing,
+  renewal, or human when fixes would be needed.
+
+Mapping statuses that set ``max_agent_tier`` to 1 are defined in
+``_TIER_BY_STATUS`` below; see ``docs/DECISIONS.md`` (D-15) for the full table.
+"""
 
 from __future__ import annotations
 
@@ -20,6 +49,7 @@ _STATUS_MESSAGES: dict[MappingStatus, str] = {
     MappingStatus.SLA_NOT_CONFIGURED: "SLA not configured for plan — escalate to human agent.",
 }
 
+# max_agent_tier ceiling per MappingStatus (1 = read-only cap, 3 = full playbook)
 _TIER_BY_STATUS: dict[MappingStatus, int] = {
     MappingStatus.ACTIVE: 3,
     MappingStatus.UNKNOWN_USER: 1,

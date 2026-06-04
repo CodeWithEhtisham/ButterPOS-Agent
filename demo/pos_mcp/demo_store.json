@@ -32,44 +32,44 @@
       "category": "Beverage",
       "tax_rate_percent": 16.0
     },
-    "item-3cffb9a8": {
-      "id": "item-3cffb9a8",
-      "branch_id": "demo-branch-karachi",
-      "name": "soup",
-      "price": 200.0,
-      "category": "Main",
-      "tax_rate_percent": 16.0
-    },
-    "item-2ec52601": {
-      "id": "item-2ec52601",
-      "branch_id": "demo-branch-karachi",
-      "name": "soup",
-      "price": 200.0,
-      "category": "Main",
-      "tax_rate_percent": 16.0
-    },
-    "item-743b8249": {
-      "id": "item-743b8249",
-      "branch_id": "demo-branch-karachi",
-      "name": "soup",
-      "price": 200.0,
-      "category": "Main",
-      "tax_rate_percent": 16.0
-    },
-    "item-b46f9196": {
-      "id": "item-b46f9196",
-      "branch_id": "demo-branch-karachi",
-      "name": "soup",
-      "price": 200.0,
-      "category": "Main",
-      "tax_rate_percent": 16.0
-    },
     "item-e8f213d0": {
       "id": "item-e8f213d0",
       "branch_id": "demo-branch-karachi",
       "name": "soup",
       "price": 200.0,
       "category": "Main",
+      "tax_rate_percent": 16.0
+    },
+    "item-06ca9aac": {
+      "id": "item-06ca9aac",
+      "branch_id": "demo-branch-karachi",
+      "name": "Kaaari",
+      "price": 150.0,
+      "category": "Main",
+      "tax_rate_percent": 16.0
+    },
+    "item-30b61c2d": {
+      "id": "item-30b61c2d",
+      "branch_id": "demo-branch-karachi",
+      "name": "Burger",
+      "price": 240.0,
+      "category": "Main",
+      "tax_rate_percent": 16.0
+    },
+    "item-eb95e4d0": {
+      "id": "item-eb95e4d0",
+      "branch_id": "demo-branch-karachi",
+      "name": "Roll",
+      "price": 200.0,
+      "category": "fast-food",
+      "tax_rate_percent": 16.0
+    },
+    "item-3c5b2e29": {
+      "id": "item-3c5b2e29",
+      "branch_id": "demo-branch-karachi",
+      "name": "Mayo Roll",
+      "price": 250.0,
+      "category": "fast-food",
       "tax_rate_percent": 16.0
     }
   },
@@ -79,7 +79,10 @@
       "printer_name": "EPSON-TM-T88VI",
       "status": "online",
       "connection": "bluetooth",
-      "last_print_at": "2026-06-03T08:00:37Z",
+      "ip_address": null,
+      "network_reachable": null,
+      "pairing_strength": "strong",
+      "last_print_at": "2026-06-03T13:45:02Z",
       "last_error": null,
       "queue_depth": 0
     }
