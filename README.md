@@ -34,7 +34,8 @@ pytest tests/ -v
 
 ## Docs
 
-See [`docs/EXECUTION_PLAN.md`](docs/EXECUTION_PLAN.md) and [`docs/PROGRESS.md`](docs/PROGRESS.md).
+- **New to the project?** Start with [`docs/BEGINNERS_GUIDE.md`](docs/BEGINNERS_GUIDE.md) (what, why, where, how).
+- Build plan: [`docs/EXECUTION_PLAN.md`](docs/EXECUTION_PLAN.md) and [`docs/PROGRESS.md`](docs/PROGRESS.md).
 
 ## CI
 

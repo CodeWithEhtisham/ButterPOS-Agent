@@ -71,6 +71,22 @@
       "price": 250.0,
       "category": "fast-food",
       "tax_rate_percent": 16.0
+    },
+    "item-4fe21759": {
+      "id": "item-4fe21759",
+      "branch_id": "demo-branch-karachi",
+      "name": "Chai",
+      "price": 80.0,
+      "category": "Beverage",
+      "tax_rate_percent": 16.0
+    },
+    "item-d541742b": {
+      "id": "item-d541742b",
+      "branch_id": "demo-branch-karachi",
+      "name": "Daal",
+      "price": 20.0,
+      "category": "Main",
+      "tax_rate_percent": 16.0
     }
   },
   "printers": {
